@@ -191,32 +191,36 @@ export default function AdminPage() {
     e.preventDefault();
     if (!supabase) return;
     
-      
-      // @ts-ignore - turnstile will be available from the script
-      if (!window.turnstile) {
-        setModal({
-          isOpen: true,
-          type: 'error',
-          title: 'Security Check Error',
-          message: 'Security check is not loaded. Please refresh the page.'
-        });
-        return;
-      }    setLoading(true);
+    setLoading(true);
     
     try {
+      // Get the Turnstile token
       // @ts-ignore - turnstile will be available from the script
-      window.turnstile.render('#turnstile-container', {
-        sitekey: 'YOUR_SITE_KEY', // You'll need to replace this with your actual site key from Cloudflare
-        callback: async function(token: string) {
-          const verified = await handleTurnstileCallback(token);
-          if (verified) {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-            setSession(data.session);
-            fetchList(data.session?.access_token);
-          }
-        },
-      });
+      const token = window.turnstile?.getResponse();
+      
+      if (!token) {
+        setModal({
+          isOpen: true,
+          type: 'warning',
+          title: 'Security Check Required',
+          message: 'Please complete the security check'
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Verify Turnstile token
+      const verified = await handleTurnstileCallback(token);
+      if (!verified) {
+        setLoading(false);
+        return;
+      }
+
+      // Proceed with sign in
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      setSession(data.session);
+      fetchList(data.session?.access_token);
     } catch (error) {
       setModal({
         isOpen: true,
@@ -374,10 +378,10 @@ export default function AdminPage() {
 
   if (!session) {
     return (
-      <main className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-8">
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 flex items-start justify-center p-8 pt-24">
         <div className="max-w-sm w-full mx-auto">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-green-600 to-emerald-600">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-600">
               Admin Access
             </h1>
           </div>
@@ -416,28 +420,33 @@ export default function AdminPage() {
                 />
               </div>
               
-                              <div className="space-y-4">
-                  <div id="turnstile-container" className="flex justify-center"></div>
-                  
-                  <button 
-                    className="w-14 h-14 flex items-center justify-center bg-linear-to-r from-green-600 to-emerald-600 
-                           hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-sm 
-                           focus:ring-2 focus:ring-green-300 transition-all mx-auto"
-                    disabled={loading}
-                    type="submit"
-                  >
-                    {loading ? (
-                      <svg className="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6">
-                        <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
+              <div className="flex justify-center py-2">
+                <div 
+                  className="cf-turnstile" 
+                  data-sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
+                  data-theme="auto"
+                ></div>
+              </div>
+
+              <button 
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 
+                       hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg 
+                       focus:ring-2 focus:ring-green-300 transition-all py-3 font-medium"
+                disabled={loading}
+                type="submit"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing in...
+                  </span>
+                ) : (
+                  'Sign In'
+                )}
+              </button>
             </form>
           </div>
         </div>

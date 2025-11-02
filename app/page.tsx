@@ -21,7 +21,7 @@ interface RequestFormModalProps {
   onClose: () => void;
   onShowMessage: (modal: {
     isOpen: boolean;
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'warning';
     title: string;
     message: string;
   }) => void;
@@ -40,6 +40,36 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
     e.preventDefault();
     try {
       setSubmitting(true);
+      
+      // Get the Turnstile token
+      // @ts-ignore - turnstile will be available from the script
+      const token = window.turnstile?.getResponse();
+      
+      if (!token) {
+        onClose();
+        onShowMessage({
+          isOpen: true,
+          type: 'warning',
+          title: 'Security Check Required',
+          message: 'Please complete the security check'
+        });
+        setSubmitting(false);
+        return;
+      }
+
+      // Verify Turnstile token
+      const verifyResponse = await fetch('/api/verify-turnstile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+      
+      const verifyResult = await verifyResponse.json();
+      if (!verifyResult.success) {
+        throw new Error('Security verification failed');
+      }
       
       console.log('Sending request with data:', formData);
       
@@ -163,6 +193,14 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
             <p className="mt-1 text-xs text-slate-500">
               {formData.details.length}/{MAX_DETAILS_LENGTH} characters
             </p>
+          </div>
+
+          <div className="flex justify-center py-2">
+            <div 
+              className="cf-turnstile" 
+              data-sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
+              data-theme="auto"
+            ></div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
