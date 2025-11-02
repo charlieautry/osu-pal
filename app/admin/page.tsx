@@ -446,7 +446,7 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-8">
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -481,16 +481,7 @@ export default function AdminPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Upload Form Section */}
-          <section className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-6 shadow-xl border border-slate-200/50 dark:border-slate-700/50 flex flex-col h-[600px]">
-            <div className="flex items-center gap-3 mb-6 flex-shrink-0">
-              <div className="p-2 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                  <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
-                  <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold">Upload New Document</h2>
-            </div>
+          <section className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-6 shadow-xl border border-slate-200/50 dark:border-slate-700/50 flex flex-col h-[653px]">
             <div className="flex-1 overflow-y-auto pr-1">
               <form onSubmit={upload} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -612,17 +603,8 @@ export default function AdminPage() {
             </div>
           </section>
 
-          <section className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-6 shadow-xl border border-slate-200/50 dark:border-slate-700/50 flex flex-col h-[600px]">
-            <div className="flex items-center justify-between mb-6 flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                    <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-semibold">Document Library</h2>
-              </div>
-              
+          <section className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-6 shadow-xl border border-slate-200/50 dark:border-slate-700/50 flex flex-col h-[653px]">
+            <div className="flex items-center justify-end mb-6 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <select

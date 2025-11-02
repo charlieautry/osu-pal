@@ -52,22 +52,19 @@ export default function RootLayout({
   return (
     <html lang="en" className={fontSans.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased transition-colors">
-        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80">
+        <header className="sticky top-0 z-50 w-full border-b border-slate-300 dark:border-slate-700 bg-slate-200/70 dark:bg-slate-800/70 backdrop-blur supports-backdrop-filter:bg-slate-200/60 dark:supports-backdrop-filter:bg-slate-800/60">
           <div className="container flex h-20 max-w-7xl items-center px-6 py-3">
-            <Link 
-              href="/" 
-              className="flex items-center space-x-2 transition-opacity hover:opacity-90"
-              aria-label="OSU PAL Home"
-            >
+            <div className="flex items-center space-x-2">
               <Image 
                 src="/images/PAL.png" 
                 alt="" 
                 width={275} 
                 height={62} 
-                className="rounded-sm" 
+                className="rounded-sm select-none pointer-events-none" 
                 priority
+                draggable={false}
               />
-            </Link>
+            </div>
           </div>
         </header>
         <main className="flex min-h-[calc(100vh-4rem)] flex-col">

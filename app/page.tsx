@@ -503,8 +503,8 @@ export default function Home() {
   }, [filtered, sortField, sortOrder]);
 
   return (
-    <div className="min-h-screen">
-      <main className="p-4 bg-linear-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950">
+      <main className="p-4">
         <div className="max-w-7xl mx-auto pt-8">
           <div className="text-center mb-8">
           <h1 className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-linear-to-r from-green-600 to-emerald-600">
@@ -903,7 +903,7 @@ export default function Home() {
                 }}
                 className="text-left w-full group"
               >
-                <div className="rounded-xl p-6 bg-white/80 dark:bg-slate-900/80 shadow-lg border border-slate-200/50 dark:border-slate-700/50 
+                <div className="rounded-xl p-6 bg-white dark:bg-slate-800 shadow-lg border border-slate-200/50 dark:border-slate-700/50 
                               hover:shadow-xl hover:border-green-500/50 dark:hover:border-green-500/50 transition-all duration-300">
                   <div className="flex items-start justify-between">
                     <div className="grow">
