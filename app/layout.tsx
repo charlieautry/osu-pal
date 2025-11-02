@@ -20,26 +20,31 @@ export const viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "OSU PAL - Course Materials and Resources",
-    template: "%s | OSU PAL"
+    default: "The PAL @ OkState",
+    template: "%s | The PAL @ OkState"
   },
   description: "Find and download course materials, assignments, and resources for your OSU classes",
-  applicationName: "OSU PAL",
-  authors: [{ name: "OSU PAL Team" }],
+  applicationName: "The PAL @ OkState",
+  authors: [{ name: "The PAL @ OkState Team" }],
   keywords: ["OSU", "course materials", "assignments", "resources", "education"],
-  creator: "OSU PAL Team",
+  creator: "The PAL @ OkState Team",
   metadataBase: new URL('https://osu-pal.vercel.app'),
+  icons: {
+    icon: '/images/OSU.png',
+    shortcut: '/images/OSU.png',
+    apple: '/images/OSU.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    title: 'OSU PAL - Course Materials and Resources',
+    title: 'The PAL @ OkState',
     description: 'Find and download course materials, assignments, and resources for your OSU classes',
-    siteName: 'OSU PAL',
+    siteName: 'The PAL @ OkState',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'OSU PAL - Course Materials and Resources',
+    title: 'The PAL @ OkState - Course Materials and Resources',
     description: 'Find and download course materials, assignments, and resources for your OSU classes',
   },
 };
