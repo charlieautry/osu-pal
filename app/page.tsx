@@ -15,11 +15,6 @@ export default function Home() {
   const [q, setQ] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   useEffect(() => {
-    // Skip the initial fetch since we're loading data in the mount effect
-    if (!courseCode && !courseNumber && !professor && !q) {
-      return;
-    }
-
     console.log('Filter effect triggered:', { courseCode, courseNumber, professor, q });
     let aborted = false;
     const controller = new AbortController();
@@ -192,13 +187,14 @@ export default function Home() {
                           hover:border-green-500 dark:hover:border-green-500"
                 value={courseCode ?? ''}
                 onChange={(e) => {
-                const v = e.target.value || undefined;
-                setCourseCode(v);
-                setCourseNumber(undefined);
-                setProfessor(undefined);
-              }}
+                  // Clear dependent filters first
+                  setCourseNumber(undefined);
+                  setProfessor(undefined);
+                  // Then set the course code (can be empty string which becomes undefined)
+                  setCourseCode(e.target.value || undefined);
+                }}
             >
-              <option value="">Select Course Code</option>
+              <option value="">All Course Codes</option>
               {courseCodes.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -212,12 +208,13 @@ export default function Home() {
                           hover:border-green-500 dark:hover:border-green-500"
                 value={courseNumber ?? ''}
                 onChange={(e) => {
-                  const v = e.target.value || undefined;
-                  setCourseNumber(v);
+                  // Clear dependent filter first
                   setProfessor(undefined);
+                  // Then set the course number
+                  setCourseNumber(e.target.value || undefined);
                 }}
               >
-                <option value="">Select Course Number</option>
+                <option value="">All Course Numbers</option>
                 {courseNumbers.map((n) => (
                   <option key={n} value={n}>{n}</option>
                 ))}
@@ -233,7 +230,7 @@ export default function Home() {
                 value={professor ?? ''}
                 onChange={(e) => setProfessor(e.target.value || undefined)}
               >
-                <option value="">Select Professor</option>
+                <option value="">All Professors</option>
                 {professors.map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
