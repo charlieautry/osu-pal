@@ -17,11 +17,72 @@ export async function GET(request: Request) {
     if (professor) qb = qb.eq('professor', professor);
 
     if (q) {
-      const safe = q.replace(/%/g, '');
-      const like = `%${safe}%`;
-      qb = qb.or(
-        `title.ilike.${like},professor.ilike.${like},"course name".ilike.${like},"course code".ilike.${like},"course number".ilike.${like},path.ilike.${like}`
-      );
+      // Normalize the search term and handle various formats
+      const safe = q.toLowerCase().replace(/%/g, '');
+      
+      // Split into terms and normalize each
+      const terms = safe.split(/\s+/).filter(Boolean);
+      
+      // Look for course code pattern (letters followed by numbers)
+      const courseCodePattern = /^([a-z]+)(\d+)$/i;
+      let searchParts: string[] = [];
+      
+      // Find any term-year combinations first
+      const termPattern = /(spring|summer|fall|winter)\s*[-]?\s*(\d{4})/i;
+      let termYear = '';
+      const restTerms = terms.filter(term => {
+        const fullTerm = term + ' ' + (terms[terms.indexOf(term) + 1] || '');
+        const match = fullTerm.match(termPattern);
+        if (match) {
+          termYear = `${match[1]} ${match[2]}`.toLowerCase();
+          return false; // Remove the term and year from further processing
+        }
+        return true;
+      });
+
+      // Process remaining terms for course codes and other content
+      restTerms.forEach(term => {
+        const stripped = term.replace(/[^a-z0-9]/gi, '');
+        const match = stripped.match(courseCodePattern);
+        
+        if (match) {
+          // If it's a course code, add specific formats
+          const [, code, number] = match;
+          searchParts.push(
+            stripped.toLowerCase(), // e.g., "hist1103"
+            `${code} ${number}`.toLowerCase() // e.g., "hist 1103"
+          );
+        } else {
+          searchParts.push(term);
+        }
+      });
+
+      // If we found a term-year combination, add it as a specific search condition
+      if (termYear) {
+        qb = qb.ilike('date', `%${termYear}%`);
+      }
+
+      // Create all possible combinations for flexible matching
+      const searchPatterns = [...new Set(searchParts)].filter(Boolean);
+      
+      // Build the OR query with ilike for case-insensitive matching
+      const patterns = searchPatterns.map(pattern => 
+        [
+          `title.ilike.%${pattern}%`,
+          `professor.ilike.%${pattern}%`,
+          `"course name".ilike.%${pattern}%`,
+          `"course code".ilike.%${pattern}%`,
+          `"course number".ilike.%${pattern}%`,
+          `path.ilike.%${pattern}%`,
+          // Add concatenated course code search
+          pattern.match(courseCodePattern) ? 
+            `concat(lower("course code"), "course number").ilike.%${pattern}%` : 
+            null
+        ].filter(Boolean).join(',')
+      ).join(',');
+
+      // Add the combined OR query to the query builder
+      qb = qb.or(patterns);
     }
 
     const { data, error } = await qb;

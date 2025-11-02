@@ -53,7 +53,7 @@ export default function RootLayout({
     <html lang="en" className={fontSans.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased transition-colors">
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80">
-          <div className="container flex h-16 max-w-6xl items-center px-4 py-2">
+          <div className="container flex h-20 max-w-7xl items-center px-6 py-3">
             <Link 
               href="/" 
               className="flex items-center space-x-2 transition-opacity hover:opacity-90"
@@ -62,8 +62,8 @@ export default function RootLayout({
               <Image 
                 src="/images/PAL.png" 
                 alt="" 
-                width={225} 
-                height={51} 
+                width={275} 
+                height={62} 
                 className="rounded-sm" 
                 priority
               />

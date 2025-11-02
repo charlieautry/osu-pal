@@ -29,19 +29,23 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    const course_code = String(formData.get('course_code') || '');
-    const course_number = String(formData.get('course_number') || '');
-    const course_name = String(formData.get('course_name') || '');
-    const professor = String(formData.get('professor') || '');
-    const title = String(formData.get('title') || '');
-    const date = String(formData.get('date') || '');
+    
+    // Extract and validate all required fields
+    const course_code = String(formData.get('course code') || '').trim();
+    const course_number = String(formData.get('course number') || '').trim();
+    const professor = String(formData.get('professor') || '').trim();
+    const title = String(formData.get('title') || '').trim();
+    const date = String(formData.get('date') || '').trim();
 
+    // Validate required fields
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     if (file.size > MAX_FILE_SIZE) return NextResponse.json({ error: 'File too large' }, { status: 400 });
-
-    if (file.type !== 'application/pdf') {
-      return NextResponse.json({ error: 'Only PDF files are allowed' }, { status: 400 });
-    }
+    if (file.type !== 'application/pdf') return NextResponse.json({ error: 'Only PDF files are allowed' }, { status: 400 });
+    
+    if (!course_code) return NextResponse.json({ error: 'Course code is required' }, { status: 400 });
+    if (!course_number) return NextResponse.json({ error: 'Course number is required' }, { status: 400 });
+    if (!professor) return NextResponse.json({ error: 'Professor name is required' }, { status: 400 });
+    if (!date) return NextResponse.json({ error: 'Date is required' }, { status: 400 });
 
     const originalName = (file as any).name || 'upload.pdf';
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -66,10 +70,9 @@ export async function POST(request: Request) {
         path,
         'course code': course_code,
         'course number': course_number,
-        'course name': course_name,
         professor,
         title,
-        date,
+        date
       },
     ]);
     if (insertRes.error) {
