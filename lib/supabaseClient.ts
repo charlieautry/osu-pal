@@ -34,11 +34,13 @@ export function getBrowserSupabaseClient(): SupabaseClient | null {
  * It uses SUPABASE_SERVICE_ROLE_KEY which must never be exposed to the browser.
  */
 export function createServerSupabaseClient(): SupabaseClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Prefer SUPABASE_URL on the server, fall back to NEXT_PUBLIC_SUPABASE_URL if present
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // Accept either SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE as env names
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
   if (!url || !serviceRole) {
     throw new Error(
-      "Missing SUPABASE environment variables for server client. Ensure SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL are set."
+      'Missing SUPABASE server environment variables. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_ROLE).'
     );
   }
   return createClient(url, serviceRole);
