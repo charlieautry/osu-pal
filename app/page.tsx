@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Select from 'react-select';
 import { termForDate } from '../lib/term';
 
 type Row = Record<string, any>;
@@ -291,6 +292,7 @@ export default function Home() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortField, setSortField] = useState<'courseCode' | 'professor' | 'date'>('courseCode');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [modal, setModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -304,6 +306,29 @@ export default function Home() {
   });
 
   const [showRequestForm, setShowRequestForm] = useState(false);
+
+  // Initialize theme from localStorage or system preference
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initialTheme = prefersDark ? 'dark' : 'light';
+      setTheme(initialTheme);
+      document.documentElement.classList.toggle('dark', prefersDark);
+    }
+  }, []);
+
+  // Toggle theme function
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  };
+
   useEffect(() => {
     let aborted = false;
     const controller = new AbortController();
@@ -492,77 +517,293 @@ export default function Home() {
             <div className="flex flex-wrap gap-3 items-center justify-between mb-4">
               <div className="flex flex-wrap gap-3 items-center">
                 {/* Filter Dropdowns */}
-                <select
-                  className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
-                            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                            hover:border-green-500 dark:hover:border-green-500"
-                  value={courseCode ?? ''}
-                  onChange={(e) => {
-                    // Clear dependent filters first
+                <Select
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  placeholder="All Course Codes"
+                  isClearable
+                  isSearchable
+                  value={courseCode ? { value: courseCode, label: courseCode } : null}
+                  onChange={(option) => {
                     setCourseNumber(undefined);
                     setProfessor(undefined);
-                    // Then set the course code (can be empty string which becomes undefined)
-                    setCourseCode(e.target.value || undefined);
+                    setCourseCode(option?.value);
                   }}
-                >
-                  <option value="">All Course Codes</option>
-                  {courseCodes.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                  options={courseCodes.map(c => ({ value: c, label: c }))}
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      minWidth: '180px',
+                      borderRadius: '0.75rem',
+                      borderWidth: '2px',
+                      borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
+                      backgroundColor: 'white',
+                      padding: '0.125rem',
+                      boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
+                      '&:hover': {
+                        borderColor: 'rgb(34, 197, 94)',
+                      },
+                      '@media (prefers-color-scheme: dark)': {
+                        backgroundColor: 'rgb(30, 41, 59)',
+                        borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
+                      }
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      color: 'rgb(15, 23, 42)',
+                      '@media (prefers-color-scheme: dark)': {
+                        color: 'rgb(226, 232, 240)',
+                      }
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: 'rgb(15, 23, 42)',
+                      '@media (prefers-color-scheme: dark)': {
+                        color: 'rgb(226, 232, 240)',
+                      }
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: 'rgb(148, 163, 184)',
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      borderRadius: '0.75rem',
+                      overflow: 'hidden',
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      backgroundColor: 'white',
+                      '@media (prefers-color-scheme: dark)': {
+                        backgroundColor: 'rgb(30, 41, 59)',
+                      }
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(240, 253, 244)' : 'white',
+                      color: state.isSelected ? 'white' : 'rgb(15, 23, 42)',
+                      '&:active': {
+                        backgroundColor: 'rgb(34, 197, 94)',
+                      },
+                      '@media (prefers-color-scheme: dark)': {
+                        backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(51, 65, 85)' : 'rgb(30, 41, 59)',
+                        color: state.isSelected ? 'white' : 'rgb(226, 232, 240)',
+                      }
+                    }),
+                  }}
+                />
 
                 {/* Only show course number select after a course code is chosen */}
                 {courseCode && (
-                  <select
-                    className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
-                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                              hover:border-green-500 dark:hover:border-green-500"
-                    value={courseNumber ?? ''}
-                    onChange={(e) => {
-                      // Clear dependent filter first
+                  <Select
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                    placeholder="All Course Numbers"
+                    isClearable
+                    isSearchable
+                    value={courseNumber ? { value: courseNumber, label: courseNumber } : null}
+                    onChange={(option) => {
                       setProfessor(undefined);
-                      // Then set the course number
-                      setCourseNumber(e.target.value || undefined);
+                      setCourseNumber(option?.value);
                     }}
-                  >
-                    <option value="">All Course Numbers</option>
-                    {courseNumbers.map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
+                    options={courseNumbers.map(n => ({ value: n, label: n }))}
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        minWidth: '180px',
+                        borderRadius: '0.75rem',
+                        borderWidth: '2px',
+                        borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
+                        backgroundColor: 'white',
+                        padding: '0.125rem',
+                        boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
+                        '&:hover': {
+                          borderColor: 'rgb(34, 197, 94)',
+                        },
+                        '@media (prefers-color-scheme: dark)': {
+                          backgroundColor: 'rgb(30, 41, 59)',
+                          borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
+                        }
+                      }),
+                      input: (base) => ({
+                        ...base,
+                        color: 'rgb(15, 23, 42)',
+                        '@media (prefers-color-scheme: dark)': {
+                          color: 'rgb(226, 232, 240)',
+                        }
+                      }),
+                      singleValue: (base) => ({
+                        ...base,
+                        color: 'rgb(15, 23, 42)',
+                        '@media (prefers-color-scheme: dark)': {
+                          color: 'rgb(226, 232, 240)',
+                        }
+                      }),
+                      placeholder: (base) => ({
+                        ...base,
+                        color: 'rgb(148, 163, 184)',
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        borderRadius: '0.75rem',
+                        overflow: 'hidden',
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                        backgroundColor: 'white',
+                        '@media (prefers-color-scheme: dark)': {
+                          backgroundColor: 'rgb(30, 41, 59)',
+                        }
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(240, 253, 244)' : 'white',
+                        color: state.isSelected ? 'white' : 'rgb(15, 23, 42)',
+                        '&:active': {
+                          backgroundColor: 'rgb(34, 197, 94)',
+                        },
+                        '@media (prefers-color-scheme: dark)': {
+                          backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(51, 65, 85)' : 'rgb(30, 41, 59)',
+                          color: state.isSelected ? 'white' : 'rgb(226, 232, 240)',
+                        }
+                      }),
+                    }}
+                  />
                 )}
 
                 {/* Only show professor select after a course number is chosen */}
                 {courseCode && courseNumber && (
-                  <select
-                    className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
-                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                              hover:border-green-500 dark:hover:border-green-500"
-                    value={professor ?? ''}
-                    onChange={(e) => setProfessor(e.target.value || undefined)}
-                  >
-                    <option value="">All Professors</option>
-                    {professors.map((p) => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
-                  </select>
+                  <Select
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                    placeholder="All Professors"
+                    isClearable
+                    isSearchable
+                    value={professor ? { value: professor, label: professor } : null}
+                    onChange={(option) => setProfessor(option?.value)}
+                    options={professors.map(p => ({ value: p, label: p }))}
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        minWidth: '200px',
+                        borderRadius: '0.75rem',
+                        borderWidth: '2px',
+                        borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
+                        backgroundColor: 'white',
+                        padding: '0.125rem',
+                        boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
+                        '&:hover': {
+                          borderColor: 'rgb(34, 197, 94)',
+                        },
+                        '@media (prefers-color-scheme: dark)': {
+                          backgroundColor: 'rgb(30, 41, 59)',
+                          borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
+                        }
+                      }),
+                      input: (base) => ({
+                        ...base,
+                        color: 'rgb(15, 23, 42)',
+                        '@media (prefers-color-scheme: dark)': {
+                          color: 'rgb(226, 232, 240)',
+                        }
+                      }),
+                      singleValue: (base) => ({
+                        ...base,
+                        color: 'rgb(15, 23, 42)',
+                        '@media (prefers-color-scheme: dark)': {
+                          color: 'rgb(226, 232, 240)',
+                        }
+                      }),
+                      placeholder: (base) => ({
+                        ...base,
+                        color: 'rgb(148, 163, 184)',
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        borderRadius: '0.75rem',
+                        overflow: 'hidden',
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                        backgroundColor: 'white',
+                        '@media (prefers-color-scheme: dark)': {
+                          backgroundColor: 'rgb(30, 41, 59)',
+                        }
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(240, 253, 244)' : 'white',
+                        color: state.isSelected ? 'white' : 'rgb(15, 23, 42)',
+                        '&:active': {
+                          backgroundColor: 'rgb(34, 197, 94)',
+                        },
+                        '@media (prefers-color-scheme: dark)': {
+                          backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(51, 65, 85)' : 'rgb(30, 41, 59)',
+                          color: state.isSelected ? 'white' : 'rgb(226, 232, 240)',
+                        }
+                      }),
+                    }}
+                  />
                 )}
               </div>
 
               {/* Sort and Order Controls - Right Aligned */}
               <div className="flex items-center gap-2">
                 {/* Sort By Dropdown */}
-                <select
-                  className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
-                            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                            hover:border-green-500 dark:hover:border-green-500"
-                  value={sortField}
-                  onChange={(e) => setSortField(e.target.value as 'courseCode' | 'professor' | 'date')}
-                >
-                  <option value="courseCode">Course Code</option>
-                  <option value="professor">Professor</option>
-                  <option value="date">Date</option>
-                </select>
+                <Select
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  value={{ value: sortField, label: sortField === 'courseCode' ? 'Course Code' : sortField === 'professor' ? 'Professor' : 'Date' }}
+                  onChange={(option) => setSortField(option?.value as 'courseCode' | 'professor' | 'date')}
+                  options={[
+                    { value: 'courseCode' as const, label: 'Course Code' },
+                    { value: 'professor' as const, label: 'Professor' },
+                    { value: 'date' as const, label: 'Date' },
+                  ]}
+                  isSearchable={false}
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      minWidth: '160px',
+                      borderRadius: '0.75rem',
+                      borderWidth: '2px',
+                      borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
+                      backgroundColor: 'rgb(241, 245, 249)',
+                      padding: '0.125rem',
+                      boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
+                      '&:hover': {
+                        borderColor: 'rgb(34, 197, 94)',
+                      },
+                      '@media (prefers-color-scheme: dark)': {
+                        backgroundColor: 'rgb(30, 41, 59)',
+                        borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
+                      }
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: 'rgb(15, 23, 42)',
+                      '@media (prefers-color-scheme: dark)': {
+                        color: 'rgb(226, 232, 240)',
+                      }
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      borderRadius: '0.75rem',
+                      overflow: 'hidden',
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      backgroundColor: 'white',
+                      '@media (prefers-color-scheme: dark)': {
+                        backgroundColor: 'rgb(30, 41, 59)',
+                      }
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(240, 253, 244)' : 'white',
+                      color: state.isSelected ? 'white' : 'rgb(15, 23, 42)',
+                      '&:active': {
+                        backgroundColor: 'rgb(34, 197, 94)',
+                      },
+                      '@media (prefers-color-scheme: dark)': {
+                        backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(51, 65, 85)' : 'rgb(30, 41, 59)',
+                        color: state.isSelected ? 'white' : 'rgb(226, 232, 240)',
+                      }
+                    }),
+                  }}
+                />
 
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
