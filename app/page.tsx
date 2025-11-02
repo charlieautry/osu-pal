@@ -34,7 +34,35 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
     details: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
   const MAX_DETAILS_LENGTH = 500; // Limit details to 500 characters
+
+  useEffect(() => {
+    if (isOpen && !turnstileWidgetId) {
+      // Wait for turnstile to be available
+      const checkTurnstile = setInterval(() => {
+        // @ts-ignore
+        if (window.turnstile) {
+          clearInterval(checkTurnstile);
+          // @ts-ignore
+          const widgetId = window.turnstile.render('#turnstile-request-container', {
+            sitekey: process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY,
+            theme: 'auto',
+          });
+          setTurnstileWidgetId(widgetId);
+        }
+      }, 100);
+
+      return () => clearInterval(checkTurnstile);
+    }
+
+    // Reset widget when modal closes
+    if (!isOpen && turnstileWidgetId) {
+      // @ts-ignore
+      window.turnstile?.reset(turnstileWidgetId);
+      setTurnstileWidgetId(null);
+    }
+  }, [isOpen, turnstileWidgetId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,13 +71,13 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
       
       // Get the Turnstile token
       // @ts-ignore - turnstile will be available from the script
-      const token = window.turnstile?.getResponse();
+      const token = window.turnstile?.getResponse(turnstileWidgetId);
       
       if (!token) {
         onClose();
         onShowMessage({
           isOpen: true,
-          type: 'warning',
+          type: 'error',
           title: 'Security Check Required',
           message: 'Please complete the security check'
         });
@@ -196,11 +224,7 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
           </div>
 
           <div className="flex justify-center py-2">
-            <div 
-              className="cf-turnstile" 
-              data-sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
-              data-theme="auto"
-            ></div>
+            <div id="turnstile-request-container"></div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

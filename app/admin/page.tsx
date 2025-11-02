@@ -115,6 +115,7 @@ export default function AdminPage() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
   const [modal, setModal] = useState<{
     isOpen: boolean;
     type: 'success' | 'error' | 'warning' | 'confirm' | 'info';
@@ -148,6 +149,30 @@ export default function AdminPage() {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Initialize Turnstile widget when not logged in
+  useEffect(() => {
+    if (!session && !turnstileWidgetId) {
+      const checkTurnstile = setInterval(() => {
+        // @ts-ignore
+        if (window.turnstile) {
+          clearInterval(checkTurnstile);
+          try {
+            // @ts-ignore
+            const widgetId = window.turnstile.render('#turnstile-admin-container', {
+              sitekey: process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY,
+              theme: 'auto',
+            });
+            setTurnstileWidgetId(widgetId);
+          } catch (e) {
+            console.error('Failed to render turnstile:', e);
+          }
+        }
+      }, 100);
+
+      return () => clearInterval(checkTurnstile);
+    }
+  }, [session, turnstileWidgetId]);
 
   async function handleTurnstileCallback(token: string) {
     if (!token) {
@@ -196,7 +221,7 @@ export default function AdminPage() {
     try {
       // Get the Turnstile token
       // @ts-ignore - turnstile will be available from the script
-      const token = window.turnstile?.getResponse();
+      const token = window.turnstile?.getResponse(turnstileWidgetId);
       
       if (!token) {
         setModal({
@@ -380,12 +405,6 @@ export default function AdminPage() {
     return (
       <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 flex items-start justify-center p-8 pt-24">
         <div className="max-w-sm w-full mx-auto">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-600">
-              Admin Access
-            </h1>
-          </div>
-          
           <div className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-8 shadow-xl border border-slate-200/50 dark:border-slate-700/50">
             <form onSubmit={signIn} className="space-y-4">
               <div>
@@ -421,11 +440,7 @@ export default function AdminPage() {
               </div>
               
               <div className="flex justify-center py-2">
-                <div 
-                  className="cf-turnstile" 
-                  data-sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
-                  data-theme="auto"
-                ></div>
+                <div id="turnstile-admin-container"></div>
               </div>
 
               <button 
