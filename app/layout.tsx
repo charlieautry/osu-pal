@@ -52,8 +52,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={fontSans.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased transition-colors">
-        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
-          <div className="container flex h-14 max-w-6xl items-center px-4">
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80">
+          <div className="container flex h-16 max-w-6xl items-center px-4 py-2">
             <Link 
               href="/" 
               className="flex items-center space-x-2 transition-opacity hover:opacity-90"
@@ -62,15 +62,15 @@ export default function RootLayout({
               <Image 
                 src="/images/PAL.png" 
                 alt="" 
-                width={120} 
-                height={27} 
+                width={225} 
+                height={51} 
                 className="rounded-sm" 
                 priority
               />
             </Link>
           </div>
         </header>
-        <main className="flex min-h-[calc(100vh-3.5rem)] flex-col">
+        <main className="flex min-h-[calc(100vh-4rem)] flex-col">
           {children}
         </main>
       </body>
