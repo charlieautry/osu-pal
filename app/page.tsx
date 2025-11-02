@@ -289,6 +289,8 @@ export default function Home() {
   const [professor, setProfessor] = useState<string | undefined>(undefined);
   const [q, setQ] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [sortField, setSortField] = useState<'courseCode' | 'professor' | 'date'>('courseCode');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [modal, setModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -445,6 +447,36 @@ export default function Home() {
       });
   }, [rows, courseCode, courseNumber, professor, q]);
 
+  const sorted = useMemo(() => {
+    const result = [...filtered];
+    
+    result.sort((a, b) => {
+      let aVal: string = '';
+      let bVal: string = '';
+      
+      if (sortField === 'courseCode') {
+        aVal = String(a['course code'] ?? a.course_code ?? '');
+        bVal = String(b['course code'] ?? b.course_code ?? '');
+      } else if (sortField === 'professor') {
+        // Extract last name (text after last space, or entire string if no space)
+        const aProf = String(a['professor'] ?? a.professor ?? '');
+        const bProf = String(b['professor'] ?? b.professor ?? '');
+        const aLastName = aProf.split(' ').pop()?.charAt(0).toUpperCase() ?? '';
+        const bLastName = bProf.split(' ').pop()?.charAt(0).toUpperCase() ?? '';
+        aVal = aLastName;
+        bVal = bLastName;
+      } else if (sortField === 'date') {
+        aVal = String(a.date ?? a['date'] ?? '');
+        bVal = String(b.date ?? b['date'] ?? '');
+      }
+      
+      const comparison = aVal.localeCompare(bVal);
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    
+    return result;
+  }, [filtered, sortField, sortOrder]);
+
   return (
     <div className="min-h-screen">
       <main className="p-4 bg-linear-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800">
@@ -457,63 +489,97 @@ export default function Home() {
 
         <div className="rounded-2xl p-6 bg-white/80 dark:bg-slate-900/80 shadow-xl backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 mb-6">
           <div className="space-y-4">
-            <div className="flex flex-wrap gap-3 items-center justify-center mb-4">
-              {/* Dropdowns with enhanced styling */}
-              <select
-                className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
-                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                          hover:border-green-500 dark:hover:border-green-500"
-                value={courseCode ?? ''}
-                onChange={(e) => {
-                  // Clear dependent filters first
-                  setCourseNumber(undefined);
-                  setProfessor(undefined);
-                  // Then set the course code (can be empty string which becomes undefined)
-                  setCourseCode(e.target.value || undefined);
-                }}
-            >
-              <option value="">All Course Codes</option>
-              {courseCodes.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            <div className="flex flex-wrap gap-3 items-center justify-between mb-4">
+              <div className="flex flex-wrap gap-3 items-center">
+                {/* Filter Dropdowns */}
+                <select
+                  className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
+                            hover:border-green-500 dark:hover:border-green-500"
+                  value={courseCode ?? ''}
+                  onChange={(e) => {
+                    // Clear dependent filters first
+                    setCourseNumber(undefined);
+                    setProfessor(undefined);
+                    // Then set the course code (can be empty string which becomes undefined)
+                    setCourseCode(e.target.value || undefined);
+                  }}
+                >
+                  <option value="">All Course Codes</option>
+                  {courseCodes.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
 
-            {/* Only show course number select after a course code is chosen */}
-            {courseCode && (
-              <select
-                className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
-                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                          hover:border-green-500 dark:hover:border-green-500"
-                value={courseNumber ?? ''}
-                onChange={(e) => {
-                  // Clear dependent filter first
-                  setProfessor(undefined);
-                  // Then set the course number
-                  setCourseNumber(e.target.value || undefined);
-                }}
-              >
-                <option value="">All Course Numbers</option>
-                {courseNumbers.map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-            )}
+                {/* Only show course number select after a course code is chosen */}
+                {courseCode && (
+                  <select
+                    className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
+                              hover:border-green-500 dark:hover:border-green-500"
+                    value={courseNumber ?? ''}
+                    onChange={(e) => {
+                      // Clear dependent filter first
+                      setProfessor(undefined);
+                      // Then set the course number
+                      setCourseNumber(e.target.value || undefined);
+                    }}
+                  >
+                    <option value="">All Course Numbers</option>
+                    {courseNumbers.map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                )}
 
-            {/* Only show professor select after a course number is chosen */}
-            {courseCode && courseNumber && (
-              <select
-                className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
-                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                          hover:border-green-500 dark:hover:border-green-500"
-                value={professor ?? ''}
-                onChange={(e) => setProfessor(e.target.value || undefined)}
-              >
-                <option value="">All Professors</option>
-                {professors.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            )}
+                {/* Only show professor select after a course number is chosen */}
+                {courseCode && courseNumber && (
+                  <select
+                    className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
+                              hover:border-green-500 dark:hover:border-green-500"
+                    value={professor ?? ''}
+                    onChange={(e) => setProfessor(e.target.value || undefined)}
+                  >
+                    <option value="">All Professors</option>
+                    {professors.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Sort and Order Controls - Right Aligned */}
+              <div className="flex items-center gap-2">
+                {/* Sort By Dropdown */}
+                <select
+                  className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
+                            hover:border-green-500 dark:hover:border-green-500"
+                  value={sortField}
+                  onChange={(e) => setSortField(e.target.value as 'courseCode' | 'professor' | 'date')}
+                >
+                  <option value="courseCode">Course Code</option>
+                  <option value="professor">Professor</option>
+                  <option value="date">Date</option>
+                </select>
+
+                <button
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="px-3 py-2 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2 border-2 border-slate-200 dark:border-slate-700"
+                  title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                >
+                  {sortOrder === 'asc' ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                      <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                      <path fillRule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158v10.638A.75.75 0 0110 17z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="relative">
@@ -555,11 +621,12 @@ export default function Home() {
                   <span>Loading results...</span>
                 </div>
               ) : (
-                <span>Found {filtered.length} document{filtered.length === 1 ? '' : 's'}</span>
+                <span>Found {sorted.length} document{sorted.length === 1 ? '' : 's'}</span>
               )}
             </div>
             <div className="text-sm text-slate-400">Click a card to download</div>
           </div>
+
           
           {loading ? (
             <div className="col-span-full flex flex-col items-center justify-center p-12">
@@ -568,7 +635,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-              {filtered.map((r) => (
+              {sorted.map((r) => (
               <button
                 key={r.path ?? r.id}
                 onClick={async () => {

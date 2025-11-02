@@ -30,9 +30,10 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     
-    // Extract and validate all required fields
-    const course_code = String(formData.get('course code') || '').trim();
-    const course_number = String(formData.get('course number') || '').trim();
+    // Extract and validate all required fields (checking both underscore and space variants)
+    const course_code = String(formData.get('course_code') || formData.get('course code') || '').trim();
+    const course_number = String(formData.get('course_number') || formData.get('course number') || '').trim();
+    const course_name = String(formData.get('course_name') || formData.get('course name') || '').trim();
     const professor = String(formData.get('professor') || '').trim();
     const title = String(formData.get('title') || '').trim();
     const date = String(formData.get('date') || '').trim();
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
         path,
         'course code': course_code,
         'course number': course_number,
+        'course name': course_name,
         professor,
         title,
         date
