@@ -15,30 +15,54 @@ export default function Home() {
   const [q, setQ] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   useEffect(() => {
+    // Skip the initial fetch since we're loading data in the mount effect
+    if (!courseCode && !courseNumber && !professor && !q) {
+      return;
+    }
+
+    console.log('Filter effect triggered:', { courseCode, courseNumber, professor, q });
     let aborted = false;
     const controller = new AbortController();
+    
     async function load() {
-      setLoading(true);
       try {
+        setLoading(true);
         const params = new URLSearchParams();
         if (courseCode) params.set('course_code', courseCode);
         if (courseNumber) params.set('course_number', courseNumber);
         if (professor) params.set('professor', professor);
         if (q) params.set('q', q);
         const url = `/api/public/list?${params.toString()}`;
-        const res = await fetch(url, { signal: controller.signal });
+        
+        console.log('Fetching filtered data:', url);
+        const res = await fetch(url, { 
+          signal: controller.signal,
+          cache: 'no-store'
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Failed to fetch data: ${res.status}`);
+        }
+        
         const j = await res.json();
-        if (aborted) return;
+        if (aborted) {
+          console.log('Filtered request was aborted');
+          return;
+        }
+        
+        console.log('Filtered data received:', j?.data?.length ?? 0, 'items');
         setRows(j?.data ?? []);
       } catch (err) {
+        console.error('Error in filtered load:', err);
         if ((err as any)?.name === 'AbortError') return;
-        console.error(err);
       } finally {
         if (!aborted) setLoading(false);
       }
     }
+
     load();
     return () => {
+      console.log('Cleanup: aborting filtered request');
       aborted = true;
       controller.abort();
     };
@@ -47,21 +71,39 @@ export default function Home() {
   // Fetch full unfiltered list once to populate dropdown options so selections
   // don't remove other possible choices. This runs only on mount.
   useEffect(() => {
+    console.log('Initial load effect triggered');
     let aborted = false;
     const controller = new AbortController();
     async function loadAll() {
+      console.log('Starting loadAll fetch');
       try {
-        const res = await fetch(`/api/public/list`, { signal: controller.signal });
+        setLoading(true); // Set loading state before fetch
+        const res = await fetch(`/api/public/list`, { 
+          signal: controller.signal,
+          cache: 'no-store'
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch data: ${res.status}`);
+        }
         const j = await res.json();
-        if (aborted) return;
+        if (aborted) {
+          console.log('Request was aborted');
+          return;
+        }
+        console.log('Data received:', j?.data?.length ?? 0, 'items');
         setAllRows(j?.data ?? []);
+        setRows(j?.data ?? []);
+        setLoading(false); // Clear loading state after successful fetch
       } catch (err) {
+        console.error('Error in loadAll:', err);
         if ((err as any)?.name === 'AbortError') return;
-        console.error('Failed to load all rows for options', err);
+        setLoading(false); // Clear loading state on error
       }
     }
+    // Load immediately on mount
     loadAll();
     return () => {
+      console.log('Cleanup: aborting request');
       aborted = true;
       controller.abort();
     };
@@ -244,8 +286,14 @@ export default function Home() {
             <div className="text-sm text-slate-400">Click a card to download</div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-            {filtered.map((r) => (
+          {loading ? (
+            <div className="col-span-full flex flex-col items-center justify-center p-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-green-600"></div>
+              <p className="mt-4 text-slate-600 dark:text-slate-400">Loading documents...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+              {filtered.map((r) => (
               <button
                 key={r.path ?? r.id}
                 onClick={async () => {
@@ -291,19 +339,19 @@ export default function Home() {
                   </div>
                 </div>
               </button>
-            ))}
-            {filtered.length === 0 && !loading && (
-              <div className="col-span-full flex flex-col items-center justify-center p-12 text-slate-500">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 mb-3 text-slate-400">
-                  <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />
-                </svg>
-                <p>No documents found matching your criteria</p>
-              </div>
-            )}
-          </div>
+              ))}
+              {filtered.length === 0 && (
+                <div className="col-span-full flex flex-col items-center justify-center p-12 text-slate-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 mb-3 text-slate-400">
+                    <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />
+                  </svg>
+                  <p>No documents found matching your criteria</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </main>
   );
 }
-
