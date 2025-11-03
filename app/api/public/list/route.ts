@@ -1,8 +1,39 @@
+/**
+ * Public API Route: List Course Materials
+ * 
+ * GET /api/public/list
+ * 
+ * This endpoint provides public access to the course materials database.
+ * Features:
+ * - Rate limited (100 requests per 10 minutes per IP)
+ * - Search and filter course materials by course code, number, professor, or text query
+ * - Advanced search parsing (handles "CS 1113", "cs1113", "CS1113" formats)
+ * - Term-based filtering (e.g., "Fall 2024", "Spring 2025")
+ * - Returns paginated results sorted by date (newest first)
+ * - No authentication required - public endpoint for student access
+ * 
+ * Query Parameters:
+ * - q: General search query (course codes, professor names, descriptions)
+ * - course_code: Specific course code filter (e.g., "CS", "MATH")
+ * - course_number: Specific course number filter (e.g., "1113", "2334")
+ * - professor: Professor name filter
+ */
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '../../../../lib/supabaseClient';
+import { checkRateLimit, getClientIP } from '../../../../lib/security';
 
 export async function GET(request: Request) {
   try {
+    // Rate limiting: 100 requests per 10 minutes per IP
+    const clientIP = getClientIP(request);
+    const rateLimitOk = checkRateLimit(clientIP, 100, 10 * 60 * 1000); // 10 minutes
+    
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
     const url = new URL(request.url);
     const course_code = url.searchParams.get('course_code') || undefined;
     const course_number = url.searchParams.get('course_number') || undefined;

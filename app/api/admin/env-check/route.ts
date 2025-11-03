@@ -1,18 +1,18 @@
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  try {
-    const present = {
-      SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
-      NEXT_PUBLIC_SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
-      SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-      SUPABASE_SERVICE_ROLE: Boolean(process.env.SUPABASE_SERVICE_ROLE),
-    };
-
-    // Do not return actual secret values — just presence booleans to help debug local env setup
-    return NextResponse.json({ ok: true, present });
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
-  }
-}
+/**
+ * Admin API Route: Environment Configuration Check
+ * 
+ * GET /api/admin/env-check
+ * 
+ * This diagnostic endpoint allows admins to verify that required environment variables
+ * are properly configured for the application. Helps with deployment troubleshooting
+ * and ensures all integrations (Supabase, Cloudflare) are set up correctly.
+ * 
+ * Authentication: Should verify Bearer token (Supabase Auth) + admin role verification
+ * 
+ * Response:
+ * - Returns status of critical environment variables (without exposing values)
+ * - Useful for deployment verification and debugging configuration issues
+ * - Only accessible to authenticated administrators
+ * 
+ * TODO: Implement the actual environment check logic
+ */

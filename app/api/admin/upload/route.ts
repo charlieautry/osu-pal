@@ -1,3 +1,30 @@
+/**
+ * Admin API Route: Upload Course Materials
+ * 
+ * POST /api/admin/upload
+ * 
+ * This protected endpoint handles PDF file uploads for course materials.
+ * Requires admin authentication and handles the complete upload workflow:
+ * - File validation (size limits, PDF format)
+ * - Metadata extraction and sanitization
+ * - Supabase Storage upload with organized file paths
+ * - Database record creation with searchable metadata
+ * - Automatic academic term calculation
+ * 
+ * Authentication: Bearer token (Supabase Auth) + admin role verification
+ * File Limits: 20MB maximum size
+ * 
+ * Form Data Fields:
+ * - file: PDF file to upload
+ * - courseCode, courseNumber: Course identification
+ * - professor: Instructor name
+ * - date: Assignment/exam date (YYYY-MM-DD format)
+ * - description: Material description
+ * 
+ * Response:
+ * - Success: { message: "...", id: "..." } - Upload confirmation with record ID
+ * - Error: { error: "..." } - Validation, storage, or database error
+ */
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from '../../../../lib/supabaseClient';
 

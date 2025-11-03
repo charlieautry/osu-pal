@@ -1,3 +1,24 @@
+/**
+ * Admin API Route: Delete Course Material by ID
+ * 
+ * DELETE /api/admin/[id]
+ * 
+ * This protected endpoint handles the deletion of specific course materials.
+ * Performs both database record removal and associated file cleanup:
+ * - Verifies admin authentication and permissions
+ * - Removes database record from the 'pdfs' table
+ * - Deletes associated file from Supabase Storage
+ * - Handles cleanup errors gracefully
+ * 
+ * Authentication: Bearer token (Supabase Auth) + admin role verification
+ * 
+ * URL Parameters:
+ * - id: Database ID of the course material record to delete
+ * 
+ * Response:
+ * - Success: { message: "Deleted successfully" }
+ * - Error: { error: "..." } - Authentication, permission, or deletion error
+ */
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from '../../../../lib/supabaseClient';
 
