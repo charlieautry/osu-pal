@@ -144,7 +144,6 @@ export default function AdminPage() {
     if (!supabase) return;
     supabase.auth.getSession().then((res: any) => {
       // res.data may be typed as any; guard access
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const currentSession = (res && res.data && res.data.session) ?? null;
       setSession(currentSession);
       // If we have a valid session, fetch the documents immediately
