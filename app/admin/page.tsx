@@ -125,6 +125,13 @@ export default function AdminPage() {
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editData, setEditData] = useState<any>({});
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<{
+    course_code?: string;
+    course_number?: string;
+    course_name?: string;
+    professor?: string;
+  }>({});
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
   const [modal, setModal] = useState<{
     isOpen: boolean;
@@ -172,6 +179,57 @@ export default function AdminPage() {
 
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Generate autocomplete suggestions for each field independently
+  useEffect(() => {
+    const newSuggestions: any = {};
+
+    // Course Code suggestion
+    if (meta.course_code) {
+      const input = meta.course_code.toLowerCase();
+      const matches = rows
+        .map(r => String(r['course code'] || ''))
+        .filter(code => code.toLowerCase().startsWith(input) && code.toLowerCase() !== input);
+      if (matches.length > 0) {
+        newSuggestions.course_code = matches[0];
+      }
+    }
+
+    // Course Number suggestion
+    if (meta.course_number) {
+      const input = meta.course_number.toLowerCase();
+      const matches = rows
+        .map(r => String(r['course number'] || ''))
+        .filter(num => num.toLowerCase().startsWith(input) && num.toLowerCase() !== input);
+      if (matches.length > 0) {
+        newSuggestions.course_number = matches[0];
+      }
+    }
+
+    // Course Name suggestion
+    if (meta.course_name) {
+      const input = meta.course_name.toLowerCase();
+      const matches = rows
+        .map(r => String(r['course name'] || ''))
+        .filter(name => name.toLowerCase().startsWith(input) && name.toLowerCase() !== input);
+      if (matches.length > 0) {
+        newSuggestions.course_name = matches[0];
+      }
+    }
+
+    // Professor suggestion
+    if (meta.professor) {
+      const input = meta.professor.toLowerCase();
+      const matches = rows
+        .map(r => String(r.professor || ''))
+        .filter(prof => prof.toLowerCase().startsWith(input) && prof.toLowerCase() !== input);
+      if (matches.length > 0) {
+        newSuggestions.professor = matches[0];
+      }
+    }
+
+    setSuggestions(newSuggestions);
+  }, [meta.course_code, meta.course_number, meta.course_name, meta.professor, rows]);
 
   // Initialize Turnstile widget when not logged in
   useEffect(() => {
@@ -392,6 +450,21 @@ export default function AdminPage() {
         type: 'error',
         title: 'Upload Failed',
         message: json?.error ?? 'Upload failed'
+      });
+    }
+  }
+
+  function handleAutofillKeyDown(e: React.KeyboardEvent, field: keyof typeof suggestions) {
+    if (e.key === 'Tab' && suggestions[field]) {
+      e.preventDefault();
+      setMeta({
+        ...meta,
+        [field]: suggestions[field],
+      });
+      // Clear the suggestion for this field after accepting
+      setSuggestions({
+        ...suggestions,
+        [field]: undefined,
       });
     }
   }
@@ -696,52 +769,96 @@ export default function AdminPage() {
             <div className="px-4 sm:px-6 pb-4 sm:pb-6">
               <form onSubmit={upload} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                  <div className="relative">
                     <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Code</label>
-                    <input 
-                      className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
-                                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                                hover:border-green-500 dark:hover:border-green-500"
-                      placeholder="e.g. CSE" 
-                      value={meta.course_code} 
-                      onChange={(e) => setMeta({ ...meta, course_code: e.target.value })} 
-                    />
+                    <div className="relative">
+                      <input 
+                        className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
+                                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
+                                  hover:border-green-500 dark:hover:border-green-500"
+                        placeholder="e.g. CSE" 
+                        value={meta.course_code} 
+                        onChange={(e) => setMeta({ ...meta, course_code: e.target.value })} 
+                        onKeyDown={(e) => handleAutofillKeyDown(e, 'course_code')}
+                        onFocus={() => setFocusedField('course_code')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                      {suggestions.course_code && focusedField === 'course_code' && (
+                        <div className="absolute inset-0 flex items-center px-3 sm:px-4 pointer-events-none text-sm sm:text-base text-slate-300 dark:text-slate-600">
+                          <span className="invisible whitespace-pre">{meta.course_code}</span>
+                          <span className="whitespace-pre">{suggestions.course_code.slice(meta.course_code.length)}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Number</label>
+                    <div className="relative">
+                      <input 
+                        className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
+                                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
+                                  hover:border-green-500 dark:hover:border-green-500"
+                        placeholder="e.g. 3901" 
+                        value={meta.course_number} 
+                        onChange={(e) => setMeta({ ...meta, course_number: e.target.value })} 
+                        onKeyDown={(e) => handleAutofillKeyDown(e, 'course_number')}
+                        onFocus={() => setFocusedField('course_number')}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                      {suggestions.course_number && focusedField === 'course_number' && (
+                        <div className="absolute inset-0 flex items-center px-3 sm:px-4 pointer-events-none text-sm sm:text-base text-slate-300 dark:text-slate-600">
+                          <span className="invisible whitespace-pre">{meta.course_number}</span>
+                          <span className="whitespace-pre">{suggestions.course_number.slice(meta.course_number.length)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Name</label>
+                  <div className="relative">
                     <input 
                       className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
                                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                                 hover:border-green-500 dark:hover:border-green-500"
-                      placeholder="e.g. 3901" 
-                      value={meta.course_number} 
-                      onChange={(e) => setMeta({ ...meta, course_number: e.target.value })} 
+                      placeholder="e.g. Project: Design and Development" 
+                      value={meta.course_name} 
+                      onChange={(e) => setMeta({ ...meta, course_name: e.target.value })} 
+                      onKeyDown={(e) => handleAutofillKeyDown(e, 'course_name')}
+                      onFocus={() => setFocusedField('course_name')}
+                      onBlur={() => setFocusedField(null)}
                     />
+                    {suggestions.course_name && focusedField === 'course_name' && (
+                      <div className="absolute inset-0 flex items-center px-3 sm:px-4 pointer-events-none text-sm sm:text-base text-slate-300 dark:text-slate-600 overflow-hidden">
+                        <span className="invisible whitespace-pre">{meta.course_name}</span>
+                        <span className="whitespace-pre truncate">{suggestions.course_name.slice(meta.course_name.length)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Name</label>
-                  <input 
-                    className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
-                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                              hover:border-green-500 dark:hover:border-green-500"
-                    placeholder="e.g. Project: Design and Development" 
-                    value={meta.course_name} 
-                    onChange={(e) => setMeta({ ...meta, course_name: e.target.value })} 
-                  />
-                </div>
-
-                <div>
+                <div className="relative">
                   <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Professor</label>
-                  <input 
-                    className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
-                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                              hover:border-green-500 dark:hover:border-green-500"
-                    placeholder="Professor's name" 
-                    value={meta.professor} 
-                    onChange={(e) => setMeta({ ...meta, professor: e.target.value })} 
-                  />
+                  <div className="relative">
+                    <input 
+                      className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
+                                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
+                                hover:border-green-500 dark:hover:border-green-500"
+                      placeholder="Professor's name" 
+                      value={meta.professor} 
+                      onChange={(e) => setMeta({ ...meta, professor: e.target.value })} 
+                      onKeyDown={(e) => handleAutofillKeyDown(e, 'professor')}
+                      onFocus={() => setFocusedField('professor')}
+                      onBlur={() => setFocusedField(null)}
+                    />
+                    {suggestions.professor && focusedField === 'professor' && (
+                      <div className="absolute inset-0 flex items-center px-3 sm:px-4 pointer-events-none text-sm sm:text-base text-slate-300 dark:text-slate-600 overflow-hidden">
+                        <span className="invisible whitespace-pre">{meta.professor}</span>
+                        <span className="whitespace-pre truncate">{suggestions.professor.slice(meta.professor.length)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
