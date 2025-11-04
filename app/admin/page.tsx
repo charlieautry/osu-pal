@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import Select from 'react-select';
 import { getBrowserSupabaseClient } from '../../lib/supabaseClient';
@@ -119,6 +119,8 @@ export default function AdminPage() {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [uploadSectionOpen, setUploadSectionOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editData, setEditData] = useState<any>({});
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -472,6 +474,57 @@ export default function AdminPage() {
     });
   }
 
+  // Memoized filtered and sorted rows
+  const filteredAndSortedRows = useMemo(() => {
+    return rows
+      .filter((r) => {
+        const q = search.trim().toLowerCase();
+        if (!q) return true;
+        const title = String(r.title ?? r['title'] ?? '').toLowerCase();
+        const prof = String(r.professor ?? r['professor'] ?? r.professor ?? '').toLowerCase();
+        const cname = String(r['course name'] ?? r.course_name ?? '').toLowerCase();
+        const ccode = String(r['course code'] ?? r.course_code ?? '').toLowerCase();
+        const cnum = String(r['course number'] ?? r.course_number ?? '').toLowerCase();
+        const path = String(r.path ?? '').toLowerCase();
+        return title.includes(q) || prof.includes(q) || cname.includes(q) || ccode.includes(q) || cnum.includes(q) || path.includes(q);
+      })
+      .sort((a, b) => {
+        const getValue = (item: any) => {
+          switch(sortBy) {
+            case 'date':
+              return new Date(item.date).getTime();
+            case 'courseCode':
+              return String(item['course code'] ?? '').toLowerCase();
+            case 'professor':
+              return String(item.professor ?? '').toLowerCase();
+            default:
+              return '';
+          }
+        };
+        const aValue = getValue(a);
+        const bValue = getValue(b);
+        const compareResult = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+        return sortOrder === 'asc' ? compareResult : -compareResult;
+      });
+  }, [rows, search, sortBy, sortOrder]);
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, sortBy, sortOrder]);
+
+  // Paginated rows for current page
+  const paginatedRows = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredAndSortedRows.slice(startIndex, endIndex);
+  }, [filteredAndSortedRows, currentPage, pageSize]);
+
+  // Calculate pagination info
+  const totalPages = Math.ceil(filteredAndSortedRows.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, filteredAndSortedRows.length);
+
   // Prevent hydration mismatch by not rendering until client-side mounted
   if (!mounted) {
     return null;
@@ -580,11 +633,11 @@ export default function AdminPage() {
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1">Upload and manage PDF resources</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/50 dark:border-slate-700/50">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border-2 border-slate-200/50 dark:border-slate-700/50 text-xs sm:text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 sm:w-5 h-4 sm:h-5 text-slate-500">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a5.99 5.99 0 00-4.793 2.39A6.483 6.483 0 0010 16.5a6.483 6.483 0 004.793-2.11A5.99 5.99 0 0010 12z" clipRule="evenodd" />
               </svg>
-              <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 truncate">{session?.user?.email}</span>
+              <span className="text-slate-600 dark:text-slate-300 truncate">{session?.user?.email}</span>
             </div>
             <div className="flex gap-2 sm:gap-4">
             <button 
@@ -597,7 +650,7 @@ export default function AdminPage() {
             <Link 
               href="/" 
               className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-green-600 text-white text-xs sm:text-sm font-medium 
-                       hover:bg-green-700 transition-colors shadow-sm text-center"
+                       hover:bg-green-700 transition-colors shadow-sm text-center flex items-center justify-center"
             >
               View Public Page
             </Link>
@@ -877,37 +930,7 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {rows
-                        .filter((r) => {
-                          const q = search.trim().toLowerCase();
-                          if (!q) return true;
-                          const title = String(r.title ?? r['title'] ?? '').toLowerCase();
-                          const prof = String(r.professor ?? r['professor'] ?? r.professor ?? '').toLowerCase();
-                          const cname = String(r['course name'] ?? r.course_name ?? '').toLowerCase();
-                          const ccode = String(r['course code'] ?? r.course_code ?? '').toLowerCase();
-                          const cnum = String(r['course number'] ?? r.course_number ?? '').toLowerCase();
-                          const path = String(r.path ?? '').toLowerCase();
-                          return title.includes(q) || prof.includes(q) || cname.includes(q) || ccode.includes(q) || cnum.includes(q) || path.includes(q);
-                        })
-                        .sort((a, b) => {
-                          const getValue = (item: any) => {
-                            switch(sortBy) {
-                              case 'date':
-                                return new Date(item.date).getTime();
-                              case 'courseCode':
-                                return String(item['course code'] ?? '').toLowerCase();
-                              case 'professor':
-                                return String(item.professor ?? '').toLowerCase();
-                              default:
-                                return '';
-                            }
-                          };
-                          const aValue = getValue(a);
-                          const bValue = getValue(b);
-                          const compareResult = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-                          return sortOrder === 'asc' ? compareResult : -compareResult;
-                        })
-                        .map((r) => {
+                      {paginatedRows.map((r) => {
                           const rowId = r.id ?? r.path;
                           const isEditing = editingRow === rowId;
                           
@@ -1088,13 +1111,175 @@ export default function AdminPage() {
                           </td>
                         </tr>
                       )}
+                      {filteredAndSortedRows.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="py-12">
+                            <div className="flex flex-col items-center justify-center text-slate-500">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 mb-3 text-slate-400">
+                                <path fillRule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm2.25 8.5a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zm0 3a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clipRule="evenodd" />
+                              </svg>
+                              <p className="text-sm">No documents found</p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
+
+              {/* Pagination Controls */}
+              {filteredAndSortedRows.length > 0 && (
+                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 px-4">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    Showing {startIndex} to {endIndex} of {filteredAndSortedRows.length} documents
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {/* Page Size Selector */}
+                    <Select
+                      instanceId="page-size-select"
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      value={{ value: pageSize, label: `${pageSize} per page` }}
+                      onChange={(option) => {
+                        if (option) {
+                          setPageSize(option.value);
+                          setCurrentPage(1);
+                        }
+                      }}
+                      options={[
+                        { value: 25, label: '25 per page' },
+                        { value: 50, label: '50 per page' },
+                        { value: 100, label: '100 per page' },
+                      ]}
+                      isSearchable={false}
+                      styles={{
+                        control: (base, state) => ({
+                          ...base,
+                          minWidth: '140px',
+                          borderRadius: '0.75rem',
+                          borderWidth: '2px',
+                          borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
+                          backgroundColor: 'white',
+                          padding: '0.125rem',
+                          boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
+                          '&:hover': {
+                            borderColor: 'rgb(34, 197, 94)',
+                          },
+                          '@media (prefers-color-scheme: dark)': {
+                            backgroundColor: 'rgb(30, 41, 59)',
+                            borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
+                          }
+                        }),
+                        singleValue: (base) => ({
+                          ...base,
+                          color: 'rgb(15, 23, 42)',
+                          fontSize: '0.875rem',
+                          '@media (prefers-color-scheme: dark)': {
+                            color: 'rgb(226, 232, 240)',
+                          }
+                        }),
+                        menu: (base) => ({
+                          ...base,
+                          borderRadius: '0.75rem',
+                          overflow: 'hidden',
+                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                          backgroundColor: 'white',
+                          '@media (prefers-color-scheme: dark)': {
+                            backgroundColor: 'rgb(30, 41, 59)',
+                          }
+                        }),
+                        option: (base, state) => ({
+                          ...base,
+                          backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(240, 253, 244)' : 'white',
+                          color: state.isSelected ? 'white' : 'rgb(15, 23, 42)',
+                          fontSize: '0.875rem',
+                          '&:active': {
+                            backgroundColor: 'rgb(34, 197, 94)',
+                          },
+                          '@media (prefers-color-scheme: dark)': {
+                            backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(51, 65, 85)' : 'rgb(30, 41, 59)',
+                            color: state.isSelected ? 'white' : 'rgb(226, 232, 240)',
+                          }
+                        }),
+                      }}
+                    />
+
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700
+                               hover:border-green-500 hover:text-green-600 dark:hover:border-green-500 dark:hover:text-green-400
+                               disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:text-current
+                               transition-colors"
+                      title="Previous page"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                        <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+
+                    {/* Page Number Input */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Page</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max={totalPages}
+                        value={currentPage}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (value >= 1 && value <= totalPages) {
+                            setCurrentPage(value);
+                          }
+                        }}
+                        onBlur={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (isNaN(value) || value < 1) {
+                            setCurrentPage(1);
+                          } else if (value > totalPages) {
+                            setCurrentPage(totalPages);
+                          }
+                        }}
+                        className="w-16 text-sm text-center rounded-lg border-2 border-slate-200 dark:border-slate-700 px-2 py-1
+                                 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 
+                                 focus:border-transparent hover:border-green-500"
+                      />
+                      <span className="text-sm text-slate-600 dark:text-slate-400">of {totalPages}</span>
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700
+                               hover:border-green-500 hover:text-green-600 dark:hover:border-green-500 dark:hover:text-green-400
+                               disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:text-current
+                               transition-colors"
+                      title="Next page"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
           </section>
         </div>
       </div>
+
+      <footer className="mt-8 md:mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="border-t border-slate-200/50 dark:border-slate-700/50 pt-4 md:pt-8">
+            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 text-center">
+              Oklahoma State Past Assessment Library
+            </p>
+          </div>
+        </div>
+      </footer>
 
       <Modal 
         isOpen={modal.isOpen} 

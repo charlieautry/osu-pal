@@ -382,6 +382,8 @@ export default function Home() {
   });
 
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   const isLocalhost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
@@ -559,12 +561,28 @@ export default function Home() {
     return result;
   }, [filtered, sortField, sortOrder]);
 
+  // Pagination calculations
+  const totalPages = Math.ceil(sorted.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, sorted.length);
+
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return sorted.slice(start, end);
+  }, [sorted, currentPage, pageSize]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [courseCode, courseNumber, professor, q, sortField, sortOrder]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950">
       <main className="p-2 md:p-4">
         <div className="max-w-7xl mx-auto pt-4 md:pt-8">
 
-        <div className="rounded-2xl p-3 md:p-6 bg-white/80 dark:bg-slate-900/80 shadow-xl backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 mb-3 md:mb-6">
+        <div className="rounded-2xl p-3 md:p-6 bg-gradient-to-br from-white to-slate-100 dark:from-slate-800 dark:to-slate-900 shadow-xl backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 mb-3 md:mb-6">
           <div className="space-y-3 md:space-y-4">
             <div className="flex flex-wrap gap-3 items-center justify-between mb-4">
               <div className="flex flex-wrap gap-3 items-center">
@@ -597,14 +615,14 @@ export default function Home() {
                       borderRadius: '0.75rem',
                       borderWidth: '2px',
                       borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
-                      backgroundColor: 'white',
+                      backgroundColor: 'transparent',
                       padding: '0.125rem',
                       boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
                       '&:hover': {
                         borderColor: 'rgb(34, 197, 94)',
                       },
                       '@media (prefers-color-scheme: dark)': {
-                        backgroundColor: 'rgb(30, 41, 59)',
+                        backgroundColor: 'transparent',
                         borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
                       }
                     }),
@@ -673,14 +691,14 @@ export default function Home() {
                         borderRadius: '0.75rem',
                         borderWidth: '2px',
                         borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
-                        backgroundColor: 'white',
+                        backgroundColor: 'transparent',
                         padding: '0.125rem',
                         boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
                         '&:hover': {
                           borderColor: 'rgb(34, 197, 94)',
                         },
                         '@media (prefers-color-scheme: dark)': {
-                          backgroundColor: 'rgb(30, 41, 59)',
+                          backgroundColor: 'transparent',
                           borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
                         }
                       }),
@@ -747,14 +765,14 @@ export default function Home() {
                         borderRadius: '0.75rem',
                         borderWidth: '2px',
                         borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
-                        backgroundColor: 'white',
+                        backgroundColor: 'transparent',
                         padding: '0.125rem',
                         boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
                         '&:hover': {
                           borderColor: 'rgb(34, 197, 94)',
                         },
                         '@media (prefers-color-scheme: dark)': {
-                          backgroundColor: 'rgb(30, 41, 59)',
+                          backgroundColor: 'transparent',
                           borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
                         }
                       }),
@@ -832,14 +850,14 @@ export default function Home() {
                       borderRadius: '0.75rem',
                       borderWidth: '2px',
                       borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
-                      backgroundColor: 'white',
+                      backgroundColor: 'transparent',
                       padding: '0.125rem',
                       boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
                       '&:hover': {
                         borderColor: 'rgb(34, 197, 94)',
                       },
                       '@media (prefers-color-scheme: dark)': {
-                        backgroundColor: 'rgb(30, 41, 59)',
+                        backgroundColor: 'transparent',
                         borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
                       }
                     }),
@@ -877,7 +895,7 @@ export default function Home() {
 
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="px-3 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 border-2 border-slate-200 dark:border-slate-700"
+                  className="px-3 py-2 rounded-lg text-sm font-medium bg-transparent text-slate-700 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-700/50 transition-all flex items-center gap-2 border-2 border-slate-200 dark:border-slate-700"
                   title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
                 >
                   {sortOrder === 'asc' ? (
@@ -895,7 +913,7 @@ export default function Home() {
 
             <div className="relative">
               <input
-                className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 pl-12 pr-4 py-3 bg-white dark:bg-slate-800 
+                className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 pl-12 pr-4 py-3 bg-transparent
                          text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500
                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                          hover:border-green-500 dark:hover:border-green-500"
@@ -947,7 +965,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-              {sorted.map((r) => (
+              {paginatedRows.map((r) => (
               <a
                 key={r.path ?? r.id}
                 href={`/api/public/download?path=${encodeURIComponent(r.path)}`}
@@ -999,6 +1017,147 @@ export default function Home() {
               )}
             </div>
           )}
+
+          {/* Pagination Controls */}
+          {sorted.length > 0 && (
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 px-4">
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                Showing {startIndex} to {endIndex} of {sorted.length} documents
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {/* Page Size Selector */}
+                <Select
+                  instanceId="page-size-select"
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  value={{ value: pageSize, label: `${pageSize} per page` }}
+                  onChange={(option) => {
+                    if (option) {
+                      setPageSize(option.value);
+                      setCurrentPage(1);
+                    }
+                  }}
+                  options={[
+                    { value: 25, label: '25 per page' },
+                    { value: 50, label: '50 per page' },
+                    { value: 100, label: '100 per page' },
+                  ]}
+                  isSearchable={false}
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      minWidth: '140px',
+                      borderRadius: '0.75rem',
+                      borderWidth: '2px',
+                      borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
+                      backgroundColor: 'white',
+                      padding: '0.125rem',
+                      boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
+                      '&:hover': {
+                        borderColor: 'rgb(34, 197, 94)',
+                      },
+                      '@media (prefers-color-scheme: dark)': {
+                        backgroundColor: 'rgb(30, 41, 59)',
+                        borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
+                      }
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: 'rgb(15, 23, 42)',
+                      fontSize: '0.875rem',
+                      '@media (prefers-color-scheme: dark)': {
+                        color: 'rgb(226, 232, 240)',
+                      }
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      borderRadius: '0.75rem',
+                      overflow: 'hidden',
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      backgroundColor: 'white',
+                      '@media (prefers-color-scheme: dark)': {
+                        backgroundColor: 'rgb(30, 41, 59)',
+                      }
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(240, 253, 244)' : 'white',
+                      color: state.isSelected ? 'white' : 'rgb(15, 23, 42)',
+                      fontSize: '0.875rem',
+                      '&:active': {
+                        backgroundColor: 'rgb(34, 197, 94)',
+                      },
+                      '@media (prefers-color-scheme: dark)': {
+                        backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(51, 65, 85)' : 'rgb(30, 41, 59)',
+                        color: state.isSelected ? 'white' : 'rgb(226, 232, 240)',
+                      }
+                    }),
+                  }}
+                />
+
+                {/* Previous Button */}
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700
+                           hover:border-green-500 hover:text-green-600 dark:hover:border-green-500 dark:hover:text-green-400
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:text-current
+                           transition-colors"
+                  title="Previous page"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                    <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+
+                {/* Page Number Input */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">Page</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={totalPages}
+                    value={currentPage}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (value >= 1 && value <= totalPages) {
+                        setCurrentPage(value);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = parseInt(e.target.value);
+                      if (isNaN(value) || value < 1) {
+                        setCurrentPage(1);
+                      } else if (value > totalPages) {
+                        setCurrentPage(totalPages);
+                      }
+                    }}
+                    className="w-16 text-sm text-center rounded-lg border-2 border-slate-200 dark:border-slate-700 px-2 py-1
+                             bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 
+                             focus:border-transparent hover:border-green-500"
+                  />
+                  <span className="text-sm text-slate-600 dark:text-slate-400">of {totalPages}</span>
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700
+                           hover:border-green-500 hover:text-green-600 dark:hover:border-green-500 dark:hover:text-green-400
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:text-current
+                           transition-colors"
+                  title="Next page"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
           </div>
         </div>
       </main>
