@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Select from 'react-select';
 import { getBrowserSupabaseClient } from '../../lib/supabaseClient';
 import { termForDate } from '../../lib/term';
 
@@ -108,10 +109,12 @@ export default function AdminPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [session, setSession] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
   const [rows, setRows] = useState<PdfRow[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [meta, setMeta] = useState({ course_code: '', course_number: '', course_name: '', professor: '', title: '', date: '' });
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -128,6 +131,7 @@ export default function AdminPage() {
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   useEffect(() => {
+    setMounted(true);
     if (!supabase) return;
     supabase.auth.getSession().then((res: any) => {
       // res.data may be typed as any; guard access
@@ -225,6 +229,7 @@ export default function AdminPage() {
     if (!supabase) return;
     
     setLoading(true);
+    setLoginError(''); // Clear any previous errors
     
     try {
       let token = 'localhost-bypass';
@@ -260,12 +265,9 @@ export default function AdminPage() {
       setSession(data.session);
       fetchList(data.session?.access_token);
     } catch (error) {
-      setModal({
-        isOpen: true,
-        type: 'error',
-        title: 'Sign In Error',
-        message: error instanceof Error ? error.message : 'An error occurred'
-      });
+      // Set inline error message for authentication failures
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setLoginError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -414,9 +416,14 @@ export default function AdminPage() {
     });
   }
 
+  // Prevent hydration mismatch by not rendering until client-side mounted
+  if (!mounted) {
+    return null;
+  }
+
   if (!session) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 flex items-start justify-center p-8 pt-24">
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 flex items-start justify-center p-8 pt-24" suppressHydrationWarning>
         <div className="max-w-sm w-full mx-auto">
           <div className="flex justify-center mb-4">
             <Link 
@@ -464,9 +471,18 @@ export default function AdminPage() {
                 />
               </div>
               
+              {loginError && (
+                <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 flex items-start gap-2">
+                  <svg className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-sm text-red-800 dark:text-red-200">{loginError}</p>
+                </div>
+              )}
+              
               {!isLocalhost && (
-                <div className="flex justify-center py-2">
-                  <div id="turnstile-admin-container"></div>
+                <div className="flex justify-center py-2" suppressHydrationWarning>
+                  <div id="turnstile-admin-container" suppressHydrationWarning></div>
                 </div>
               )}
 
@@ -476,6 +492,7 @@ export default function AdminPage() {
                        focus:ring-2 focus:ring-green-300 transition-all py-3 font-medium"
                 disabled={loading}
                 type="submit"
+                suppressHydrationWarning
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -497,7 +514,7 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 p-8">
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 p-8" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -625,11 +642,12 @@ export default function AdminPage() {
 
                 <div>
                   <button 
-                    className="w-full text-sm px-4 py-3 bg-linear-to-r from-green-600 to-emerald-600 
+                    className="w-full text-sm px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 
                              hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-sm 
                              focus:ring-2 focus:ring-green-300 transition-all font-medium flex items-center justify-center gap-2" 
                     disabled={loading} 
                     type="submit"
+                    suppressHydrationWarning
                   >
                     {loading ? (
                       <>
@@ -658,18 +676,67 @@ export default function AdminPage() {
             <div className="flex items-center justify-end mb-6 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <select
-                    className="rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 py-2 
-                              bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 
-                              focus:border-transparent transition-all hover:border-green-500 dark:hover:border-green-500
-                              text-sm text-slate-700 dark:text-slate-300"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                  >
-                    <option value="date">Date</option>
-                    <option value="courseCode">Course Code</option>
-                    <option value="professor">Professor</option>
-                  </select>
+                  <Select
+                    instanceId="admin-sort-select"
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                    value={{ value: sortBy, label: sortBy === 'date' ? 'Date' : sortBy === 'courseCode' ? 'Course Code' : 'Professor' }}
+                    onChange={(option) => setSortBy(option?.value as string)}
+                    options={[
+                      { value: 'date', label: 'Date' },
+                      { value: 'courseCode', label: 'Course Code' },
+                      { value: 'professor', label: 'Professor' },
+                    ]}
+                    isSearchable={false}
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        minWidth: '160px',
+                        borderRadius: '0.75rem',
+                        borderWidth: '2px',
+                        borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
+                        backgroundColor: 'white',
+                        padding: '0.125rem',
+                        boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
+                        '&:hover': {
+                          borderColor: 'rgb(34, 197, 94)',
+                        },
+                        '@media (prefers-color-scheme: dark)': {
+                          backgroundColor: 'rgb(30, 41, 59)',
+                          borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(51, 65, 85)',
+                        }
+                      }),
+                      singleValue: (base) => ({
+                        ...base,
+                        color: 'rgb(15, 23, 42)',
+                        '@media (prefers-color-scheme: dark)': {
+                          color: 'rgb(226, 232, 240)',
+                        }
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        borderRadius: '0.75rem',
+                        overflow: 'hidden',
+                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                        backgroundColor: 'white',
+                        '@media (prefers-color-scheme: dark)': {
+                          backgroundColor: 'rgb(30, 41, 59)',
+                        }
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(240, 253, 244)' : 'white',
+                        color: state.isSelected ? 'white' : 'rgb(15, 23, 42)',
+                        '&:active': {
+                          backgroundColor: 'rgb(34, 197, 94)',
+                        },
+                        '@media (prefers-color-scheme: dark)': {
+                          backgroundColor: state.isSelected ? 'rgb(34, 197, 94)' : state.isFocused ? 'rgb(51, 65, 85)' : 'rgb(30, 41, 59)',
+                          color: state.isSelected ? 'white' : 'rgb(226, 232, 240)',
+                        }
+                      }),
+                    }}
+                  />
                   <button
                     onClick={() => setSortOrder(order => order === 'asc' ? 'desc' : 'asc')}
                     className="p-2 rounded-xl border-2 border-slate-200 dark:border-slate-700

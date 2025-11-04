@@ -369,7 +369,6 @@ export default function Home() {
   const [showFilters, setShowFilters] = useState(false);
   const [sortField, setSortField] = useState<'courseCode' | 'professor' | 'date'>('courseCode');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [modal, setModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -386,28 +385,6 @@ export default function Home() {
 
   const isLocalhost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  // Initialize theme from localStorage or system preference
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initialTheme = prefersDark ? 'dark' : 'light';
-      setTheme(initialTheme);
-      document.documentElement.classList.toggle('dark', prefersDark);
-    }
-  }, []);
-
-  // Toggle theme function
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-  };
 
   useEffect(() => {
     let aborted = false;
@@ -586,18 +563,21 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950">
       <main className="p-2 md:p-4">
         <div className="max-w-7xl mx-auto pt-4 md:pt-8">
-          <div className="text-center mb-4 md:mb-8">
-          <h1 className="text-3xl md:text-5xl font-bold mb-2 md:mb-4 bg-clip-text text-transparent bg-linear-to-r from-green-600 to-emerald-600">
-            OSU PAL Document Search
-          </h1>
-        </div>
 
         <div className="rounded-2xl p-3 md:p-6 bg-white/80 dark:bg-slate-900/80 shadow-xl backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 mb-3 md:mb-6">
           <div className="space-y-3 md:space-y-4">
             <div className="flex flex-wrap gap-3 items-center justify-between mb-4">
               <div className="flex flex-wrap gap-3 items-center">
+                {/* Filter Icon */}
+                <div className="flex items-center text-slate-600 dark:text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                    <path fillRule="evenodd" d="M2.628 1.601C5.028 1.206 7.49 1 10 1s4.973.206 7.372.601a.75.75 0 01.628.74v2.288a2.25 2.25 0 01-.659 1.59l-4.682 4.683a2.25 2.25 0 00-.659 1.59v3.037c0 .684-.31 1.33-.844 1.757l-1.937 1.55A.75.75 0 018 18.25v-5.757a2.25 2.25 0 00-.659-1.591L2.659 6.22A2.25 2.25 0 012 4.629V2.34a.75.75 0 01.628-.74z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                
                 {/* Filter Dropdowns */}
                 <Select
+                  instanceId="course-code-select"
                   className="react-select-container"
                   classNamePrefix="react-select"
                   placeholder="All Course Codes"
@@ -674,6 +654,7 @@ export default function Home() {
                 {/* Only show course number select after a course code is chosen */}
                 {courseCode && (
                   <Select
+                    instanceId="course-number-select"
                     className="react-select-container"
                     classNamePrefix="react-select"
                     placeholder="All Course Numbers"
@@ -750,6 +731,7 @@ export default function Home() {
                 {/* Only show professor select after a course number is chosen */}
                 {courseCode && courseNumber && (
                   <Select
+                    instanceId="professor-select"
                     className="react-select-container"
                     classNamePrefix="react-select"
                     placeholder="All Professors"
@@ -823,8 +805,16 @@ export default function Home() {
 
               {/* Sort and Order Controls - Right Aligned */}
               <div className="flex items-center gap-2">
+                {/* Sort Icon */}
+                <div className="flex items-center text-slate-600 dark:text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                    <path fillRule="evenodd" d="M2.24 6.8a.75.75 0 001.06-.04l1.95-2.1v8.59a.75.75 0 001.5 0V4.66l1.95 2.1a.75.75 0 101.1-1.02l-3.25-3.5a.75.75 0 00-1.1 0L2.2 5.74a.75.75 0 00.04 1.06zm8 6.4a.75.75 0 00-.04 1.06l3.25 3.5a.75.75 0 001.1 0l3.25-3.5a.75.75 0 10-1.1-1.02l-1.95 2.1V6.75a.75.75 0 00-1.5 0v8.59l-1.95-2.1a.75.75 0 00-1.06-.04z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                
                 {/* Sort By Dropdown */}
                 <Select
+                  instanceId="sort-by-select"
                   className="react-select-container"
                   classNamePrefix="react-select"
                   value={{ value: sortField, label: sortField === 'courseCode' ? 'Course Code' : sortField === 'professor' ? 'Professor' : 'Date' }}
@@ -842,7 +832,7 @@ export default function Home() {
                       borderRadius: '0.75rem',
                       borderWidth: '2px',
                       borderColor: state.isFocused ? 'rgb(34, 197, 94)' : 'rgb(226, 232, 240)',
-                      backgroundColor: 'rgb(241, 245, 249)',
+                      backgroundColor: 'white',
                       padding: '0.125rem',
                       boxShadow: state.isFocused ? '0 0 0 2px rgb(34 197 94 / 0.2)' : 'none',
                       '&:hover': {
@@ -887,7 +877,7 @@ export default function Home() {
 
                 <button
                   onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="px-3 py-2 rounded-lg text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2 border-2 border-slate-200 dark:border-slate-700"
+                  className="px-3 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 border-2 border-slate-200 dark:border-slate-700"
                   title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
                 >
                   {sortOrder === 'asc' ? (
@@ -906,6 +896,7 @@ export default function Home() {
             <div className="relative">
               <input
                 className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 pl-12 pr-4 py-3 bg-white dark:bg-slate-800 
+                         text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500
                          focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                          hover:border-green-500 dark:hover:border-green-500"
                 placeholder="Search by title, professor, or course name..."
@@ -963,24 +954,24 @@ export default function Home() {
                 download
                 className="text-left w-full group block"
               >
-                <div className="rounded-xl p-4 md:p-6 bg-white dark:bg-slate-800 shadow-lg border border-slate-200/50 dark:border-slate-700/50 
+                <div className="rounded-xl p-4 md:p-6 bg-gradient-to-br from-white to-slate-100 dark:from-slate-800 dark:to-slate-900 shadow-lg border border-slate-200/50 dark:border-slate-700/50 
                               hover:shadow-xl hover:border-green-500/50 dark:hover:border-green-500/50 transition-all duration-300">
                   <div className="flex items-start justify-between">
                     <div className="grow">
-                      <h3 className="text-base md:text-lg font-semibold group-hover:text-green-600 transition-colors">
+                      <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100 group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors">
                         {r.title ?? r['title'] ?? 'Untitled'}
                       </h3>
                       <div className="mt-1 text-xs md:text-sm text-slate-600 dark:text-slate-400">
                         {r['course name'] ?? r.course_name ?? ''}
                       </div>
                       <div className="mt-1.5 md:mt-2 flex flex-wrap gap-1.5 md:gap-2">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                           {r['course code']} {r['course number']}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                           {r.professor}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                           {termForDate(r.date)}
                         </span>
                       </div>
@@ -999,8 +990,8 @@ export default function Home() {
               </a>
               ))}
               {filtered.length === 0 && (
-                <div className="col-span-full flex flex-col items-center justify-center p-12 text-slate-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 mb-3 text-slate-400">
+                <div className="col-span-full flex flex-col items-center justify-center p-12 text-slate-500 dark:text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 mb-3 text-slate-400 dark:text-slate-500">
                     <path fillRule="evenodd" d="M10 2c-1.716 0-3.408.106-5.07.31C3.806 2.45 3 3.414 3 4.517V17.25a.75.75 0 001.075.676L10 15.082l5.925 2.844A.75.75 0 0017 17.25V4.517c0-1.103-.806-2.068-1.93-2.207A41.403 41.403 0 0010 2z" clipRule="evenodd" />
                   </svg>
                   <p>No documents found matching your criteria</p>
@@ -1056,7 +1047,7 @@ export default function Home() {
           </div>
           
           <div className="border-t border-slate-200/50 dark:border-slate-700/50 mt-4 md:mt-8 pt-4 md:pt-8">
-            <p className="text-xs md:text-sm text-slate-500 text-center">
+            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 text-center">
               Oklahoma State Past Assessment Library
             </p>
           </div>
