@@ -1000,6 +1000,9 @@ export default function Home() {
                       <h3 className="text-lg font-semibold group-hover:text-green-600 transition-colors">
                         {r.title ?? r['title'] ?? 'Untitled'}
                       </h3>
+                      <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                        {r['course name'] ?? r.course_name ?? ''}
+                      </div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
                           {r['course code']} {r['course number']}
