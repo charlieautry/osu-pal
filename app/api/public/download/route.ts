@@ -9,10 +9,22 @@ export async function GET(request: Request) {
     const path = decodeURIComponent(raw);
 
     const supabase = createServerSupabaseClient();
-    // create a short-lived signed URL (60 seconds)
+    // Create a short-lived signed URL (60 seconds)
     const { data, error } = await supabase.storage.from('pdfs').createSignedUrl(path, 60);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ url: data.signedUrl });
+
+    // Ensure downloads work well on mobile by forcing attachment disposition when navigating directly.
+    const signed = new URL(data.signedUrl);
+    // Append a filename to encourage Content-Disposition: attachment on Supabase Storage
+    const filename = path.split('/').pop() || 'download.pdf';
+    // Some Supabase deployments honor the "download" search param to force attachment
+    if (!signed.searchParams.has('download')) {
+      signed.searchParams.set('download', filename);
+    }
+
+    // Use a 307 redirect to preserve the GET method and ensure better mobile compatibility
+    // 307 ensures that the method and body are not changed during redirect
+    return NextResponse.redirect(signed.toString(), { status: 307 });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? String(err) }, { status: 500 });
   }

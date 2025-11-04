@@ -124,6 +124,9 @@ export default function AdminPage() {
     onConfirm?: () => void;
   }>({ isOpen: false, type: 'info', title: '', message: '' });
 
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then((res: any) => {
@@ -152,6 +155,11 @@ export default function AdminPage() {
 
   // Initialize Turnstile widget when not logged in
   useEffect(() => {
+    // Skip Turnstile on localhost
+    if (isLocalhost) {
+      return;
+    }
+
     if (!session && !turnstileWidgetId) {
       const checkTurnstile = setInterval(() => {
         // @ts-ignore
@@ -219,26 +227,31 @@ export default function AdminPage() {
     setLoading(true);
     
     try {
-      // Get the Turnstile token
-      // @ts-ignore - turnstile will be available from the script
-      const token = window.turnstile?.getResponse(turnstileWidgetId);
+      let token = 'localhost-bypass';
       
-      if (!token) {
-        setModal({
-          isOpen: true,
-          type: 'warning',
-          title: 'Security Check Required',
-          message: 'Please complete the security check'
-        });
-        setLoading(false);
-        return;
-      }
+      // Only get and verify Turnstile token if not on localhost
+      if (!isLocalhost) {
+        // Get the Turnstile token
+        // @ts-ignore - turnstile will be available from the script
+        token = window.turnstile?.getResponse(turnstileWidgetId);
+        
+        if (!token) {
+          setModal({
+            isOpen: true,
+            type: 'warning',
+            title: 'Security Check Required',
+            message: 'Please complete the security check'
+          });
+          setLoading(false);
+          return;
+        }
 
-      // Verify Turnstile token
-      const verified = await handleTurnstileCallback(token);
-      if (!verified) {
-        setLoading(false);
-        return;
+        // Verify Turnstile token
+        const verified = await handleTurnstileCallback(token);
+        if (!verified) {
+          setLoading(false);
+          return;
+        }
       }
 
       // Proceed with sign in
@@ -405,6 +418,18 @@ export default function AdminPage() {
     return (
       <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 flex items-start justify-center p-8 pt-24">
         <div className="max-w-sm w-full mx-auto">
+          <div className="flex justify-center mb-4">
+            <Link 
+              href="/" 
+              className="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-medium 
+                       hover:bg-green-700 transition-colors shadow-sm inline-flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+              </svg>
+              Back to Public Page
+            </Link>
+          </div>
           <div className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-8 shadow-xl border border-slate-200/50 dark:border-slate-700/50">
             <form onSubmit={signIn} className="space-y-4">
               <div>
@@ -439,9 +464,11 @@ export default function AdminPage() {
                 />
               </div>
               
-              <div className="flex justify-center py-2">
-                <div id="turnstile-admin-container"></div>
-              </div>
+              {!isLocalhost && (
+                <div className="flex justify-center py-2">
+                  <div id="turnstile-admin-container"></div>
+                </div>
+              )}
 
               <button 
                 className="w-full bg-gradient-to-r from-green-600 to-emerald-600 

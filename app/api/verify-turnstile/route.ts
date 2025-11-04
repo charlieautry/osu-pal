@@ -4,6 +4,15 @@ export async function POST(request: NextRequest) {
   try {
     const { token } = await request.json();
 
+    // Skip Turnstile verification on localhost
+    const host = request.headers.get('host') || '';
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+    
+    if (isLocalhost) {
+      console.log('Localhost detected - bypassing Turnstile verification');
+      return NextResponse.json({ success: true });
+    }
+
     if (!token) {
       return NextResponse.json(
         { success: false, error: 'Token is required' },

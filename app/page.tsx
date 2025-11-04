@@ -37,7 +37,15 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
   const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
   const MAX_DETAILS_LENGTH = 500; // Limit details to 500 characters
 
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
   useEffect(() => {
+    // Skip Turnstile on localhost
+    if (isLocalhost) {
+      return;
+    }
+
     if (isOpen && !turnstileWidgetId) {
       // Wait for turnstile to be available
       const checkTurnstile = setInterval(() => {
@@ -69,23 +77,28 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
     try {
       setSubmitting(true);
       
-      // Get the Turnstile token
-      // @ts-ignore - turnstile will be available from the script
-      const token = window.turnstile?.getResponse(turnstileWidgetId);
+      let token = 'localhost-bypass';
       
-      if (!token) {
-        onClose();
-        onShowMessage({
-          isOpen: true,
-          type: 'error',
-          title: 'Security Check Required',
-          message: 'Please complete the security check'
-        });
-        setSubmitting(false);
-        return;
+      // Only get and verify Turnstile token if not on localhost
+      if (!isLocalhost) {
+        // Get the Turnstile token
+        // @ts-ignore - turnstile will be available from the script
+        token = window.turnstile?.getResponse(turnstileWidgetId);
+        
+        if (!token) {
+          onClose();
+          onShowMessage({
+            isOpen: true,
+            type: 'error',
+            title: 'Security Check Required',
+            message: 'Please complete the security check'
+          });
+          setSubmitting(false);
+          return;
+        }
       }
 
-      // Verify Turnstile token
+      // Verify Turnstile token (will auto-pass on localhost)
       const verifyResponse = await fetch('/api/verify-turnstile', {
         method: 'POST',
         headers: {
@@ -223,9 +236,11 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
             </p>
           </div>
 
-          <div className="flex justify-center py-2">
-            <div id="turnstile-request-container"></div>
-          </div>
+          {!isLocalhost && (
+            <div className="flex justify-center py-2">
+              <div id="turnstile-request-container"></div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <button
@@ -368,6 +383,9 @@ export default function Home() {
   });
 
   const [showRequestForm, setShowRequestForm] = useState(false);
+
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   // Initialize theme from localStorage or system preference
   useEffect(() => {
@@ -937,33 +955,13 @@ export default function Home() {
               <p className="mt-4 text-slate-600 dark:text-slate-400">Loading documents...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sorted.map((r) => (
-              <button
+              <a
                 key={r.path ?? r.id}
-                onClick={async () => {
-                  try {
-                    const res = await fetch(`/api/public/download?path=${encodeURIComponent(r.path)}`);
-                    const j = await res.json();
-                    if (j?.url) window.open(j.url, '_blank');
-                    else {
-                      setModal({
-                        isOpen: true,
-                        type: 'error',
-                        title: 'Download Failed',
-                        message: j?.error ?? 'Unable to generate download URL'
-                      });
-                    }
-                  } catch (err) {
-                    setModal({
-                      isOpen: true,
-                      type: 'error',
-                      title: 'Download Error',
-                      message: String(err)
-                    });
-                  }
-                }}
-                className="text-left w-full group"
+                href={`/api/public/download?path=${encodeURIComponent(r.path)}`}
+                download
+                className="text-left w-full group block"
               >
                 <div className="rounded-xl p-6 bg-white dark:bg-slate-800 shadow-lg border border-slate-200/50 dark:border-slate-700/50 
                               hover:shadow-xl hover:border-green-500/50 dark:hover:border-green-500/50 transition-all duration-300">
@@ -998,7 +996,7 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              </button>
+              </a>
               ))}
               {filtered.length === 0 && (
                 <div className="col-span-full flex flex-col items-center justify-center p-12 text-slate-500">
