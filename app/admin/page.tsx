@@ -116,6 +116,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [uploadSectionOpen, setUploadSectionOpen] = useState(false);
@@ -162,6 +163,15 @@ export default function AdminPage() {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Initialize Turnstile widget when not logged in
   useEffect(() => {
@@ -478,7 +488,7 @@ export default function AdminPage() {
   const filteredAndSortedRows = useMemo(() => {
     return rows
       .filter((r) => {
-        const q = search.trim().toLowerCase();
+        const q = debouncedSearch.trim().toLowerCase();
         if (!q) return true;
         const title = String(r.title ?? r['title'] ?? '').toLowerCase();
         const prof = String(r.professor ?? r['professor'] ?? r.professor ?? '').toLowerCase();
@@ -506,12 +516,12 @@ export default function AdminPage() {
         const compareResult = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
         return sortOrder === 'asc' ? compareResult : -compareResult;
       });
-  }, [rows, search, sortBy, sortOrder]);
+  }, [rows, debouncedSearch, sortBy, sortOrder]);
 
   // Reset to page 1 when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, sortBy, sortOrder]);
+  }, [debouncedSearch, sortBy, sortOrder]);
 
   // Paginated rows for current page
   const paginatedRows = useMemo(() => {

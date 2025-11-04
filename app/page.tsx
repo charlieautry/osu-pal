@@ -366,6 +366,7 @@ export default function Home() {
   const [courseNumber, setCourseNumber] = useState<string | undefined>(undefined);
   const [professor, setProfessor] = useState<string | undefined>(undefined);
   const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [sortField, setSortField] = useState<'courseCode' | 'professor' | 'date'>('courseCode');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -387,6 +388,15 @@ export default function Home() {
 
   const isLocalhost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQ(q);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [q]);
 
   useEffect(() => {
     let aborted = false;
@@ -504,7 +514,7 @@ export default function Home() {
 
   const filtered = useMemo(() => {
       // Normalize search term to handle both space and hyphen formats
-      const termWithSpaces = q.trim().toLowerCase();
+      const termWithSpaces = debouncedQ.trim().toLowerCase();
       const termWithHyphens = termWithSpaces.replace(/\s+/g, '-');
       
       return rows.filter((r) => {
@@ -529,7 +539,7 @@ export default function Home() {
         return searchTextWithSpaces.includes(termWithSpaces) || 
                searchTextWithHyphens.includes(termWithHyphens);
       });
-  }, [rows, courseCode, courseNumber, professor, q]);
+  }, [rows, courseCode, courseNumber, professor, debouncedQ]);
 
   const sorted = useMemo(() => {
     const result = [...filtered];
@@ -575,7 +585,7 @@ export default function Home() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [courseCode, courseNumber, professor, q, sortField, sortOrder]);
+  }, [courseCode, courseNumber, professor, debouncedQ, sortField, sortOrder]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950">
@@ -954,7 +964,7 @@ export default function Home() {
                 <span>Found {sorted.length} document{sorted.length === 1 ? '' : 's'}</span>
               )}
             </div>
-            <div className="text-sm text-slate-400 hidden md:block">Click a card to download</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400 hidden md:block">Click a card to download</div>
           </div>
 
           
