@@ -1031,9 +1031,9 @@ export default function Home() {
             <div>
               <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 md:mb-4">About the PAL</h3>
               <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mb-3 md:mb-4">
-                The OKST PAL is a student-run resource sharing platform designed to help Oklahoma State University students
-                access past course materials, assignments, and study resources. Our goal is to foster collaborative
-                learning and academic success.
+                The OKST PAL is a collaborative platform created in partnership with faculty to help Oklahoma State University students 
+                access past course materials and study resources. We work directly with professors to provide approved, high-quality 
+                materials that support collaborative learning and academic success.
               </p>
             </div>
             
