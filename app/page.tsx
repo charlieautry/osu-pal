@@ -584,16 +584,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950">
-      <main className="p-4">
-        <div className="max-w-7xl mx-auto pt-8">
-          <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-linear-to-r from-green-600 to-emerald-600">
+      <main className="p-2 md:p-4">
+        <div className="max-w-7xl mx-auto pt-4 md:pt-8">
+          <div className="text-center mb-4 md:mb-8">
+          <h1 className="text-3xl md:text-5xl font-bold mb-2 md:mb-4 bg-clip-text text-transparent bg-linear-to-r from-green-600 to-emerald-600">
             OSU PAL Document Search
           </h1>
         </div>
 
-        <div className="rounded-2xl p-6 bg-white/80 dark:bg-slate-900/80 shadow-xl backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 mb-6">
-          <div className="space-y-4">
+        <div className="rounded-2xl p-3 md:p-6 bg-white/80 dark:bg-slate-900/80 shadow-xl backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 mb-3 md:mb-6">
+          <div className="space-y-3 md:space-y-4">
             <div className="flex flex-wrap gap-3 items-center justify-between mb-4">
               <div className="flex flex-wrap gap-3 items-center">
                 {/* Filter Dropdowns */}
@@ -931,7 +931,7 @@ export default function Home() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-3 md:mb-6">
             <div className="text-sm text-slate-500 font-medium">
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -945,7 +945,7 @@ export default function Home() {
                 <span>Found {sorted.length} document{sorted.length === 1 ? '' : 's'}</span>
               )}
             </div>
-            <div className="text-sm text-slate-400">Click a card to download</div>
+            <div className="text-sm text-slate-400 hidden md:block">Click a card to download</div>
           </div>
 
           
@@ -955,7 +955,7 @@ export default function Home() {
               <p className="mt-4 text-slate-600 dark:text-slate-400">Loading documents...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {sorted.map((r) => (
               <a
                 key={r.path ?? r.id}
@@ -963,32 +963,32 @@ export default function Home() {
                 download
                 className="text-left w-full group block"
               >
-                <div className="rounded-xl p-6 bg-white dark:bg-slate-800 shadow-lg border border-slate-200/50 dark:border-slate-700/50 
+                <div className="rounded-xl p-4 md:p-6 bg-white dark:bg-slate-800 shadow-lg border border-slate-200/50 dark:border-slate-700/50 
                               hover:shadow-xl hover:border-green-500/50 dark:hover:border-green-500/50 transition-all duration-300">
                   <div className="flex items-start justify-between">
                     <div className="grow">
-                      <h3 className="text-lg font-semibold group-hover:text-green-600 transition-colors">
+                      <h3 className="text-base md:text-lg font-semibold group-hover:text-green-600 transition-colors">
                         {r.title ?? r['title'] ?? 'Untitled'}
                       </h3>
-                      <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      <div className="mt-1 text-xs md:text-sm text-slate-600 dark:text-slate-400">
                         {r['course name'] ?? r.course_name ?? ''}
                       </div>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                      <div className="mt-1.5 md:mt-2 flex flex-wrap gap-1.5 md:gap-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
                           {r['course code']} {r['course number']}
                         </span>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
                           {r.professor}
                         </span>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
                           {termForDate(r.date)}
                         </span>
                       </div>
                     </div>
-                    <div className="ml-4 shrink-0">
-                      <div className="rounded-full p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 
+                    <div className="ml-3 md:ml-4 shrink-0">
+                      <div className="rounded-full p-1.5 md:p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 
                                     group-hover:bg-green-600 group-hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 md:w-5 md:h-5">
                           <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
                           <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
                         </svg>
@@ -1012,25 +1012,25 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="bg-white/80 dark:bg-slate-900/80 border-t border-slate-200/50 dark:border-slate-700/50 mt-16">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 text-center">
+      <footer className="bg-white/80 dark:bg-slate-900/80 border-t border-slate-200/50 dark:border-slate-700/50 mt-8 md:mt-16">
+        <div className="max-w-7xl mx-auto py-6 md:py-12 px-3 md:px-4 sm:px-6 lg:px-8">
+          <div className="mb-6 md:mb-8 text-center">
             <button
               onClick={() => setShowRequestForm(true)}
-              className="inline-flex items-center px-6 py-3 rounded-xl bg-green-600 text-white text-sm font-medium 
+              className="inline-flex items-center px-4 md:px-6 py-2.5 md:py-3 rounded-xl bg-green-600 text-white text-sm font-medium 
                        hover:bg-green-700 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 mr-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 md:w-5 md:h-5 mr-2">
                 <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
               </svg>
               Request New Course Materials
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">About the PAL</h3>
-              <p className="text-slate-600 dark:text-slate-400 mb-4">
+              <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 md:mb-4">About the PAL</h3>
+              <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mb-3 md:mb-4">
                 The OKST PAL is a student-run resource sharing platform designed to help Oklahoma State University students
                 access past course materials, assignments, and study resources. Our goal is to foster collaborative
                 learning and academic success.
@@ -1038,15 +1038,15 @@ export default function Home() {
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Contact & Takedown Requests</h3>
-              <p className="text-slate-600 dark:text-slate-400 mb-4">
+              <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 md:mb-4">Contact & Takedown Requests</h3>
+              <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mb-3 md:mb-4">
                 If you have questions, or are a faculty member and wish to request the removal of specific materials, please contact me at the email below.
               </p>
               <a 
                 href="mailto:charles.autry@okstate.edu"
-                className="inline-flex items-center text-green-600 hover:text-green-700 transition-colors"
+                className="inline-flex items-center text-green-600 hover:text-green-700 transition-colors text-sm md:text-base"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 md:w-5 md:h-5 mr-2">
                   <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
                   <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
                 </svg>
@@ -1055,8 +1055,8 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="border-t border-slate-200/50 dark:border-slate-700/50 mt-8 pt-8">
-            <p className="text-sm text-slate-500 text-center">
+          <div className="border-t border-slate-200/50 dark:border-slate-700/50 mt-4 md:mt-8 pt-4 md:pt-8">
+            <p className="text-xs md:text-sm text-slate-500 text-center">
               Oklahoma State Past Assessment Library
             </p>
           </div>
