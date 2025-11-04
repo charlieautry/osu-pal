@@ -1,26 +1,3 @@
-/**
- * Admin API Route: List Course Materials (Protected)
- * 
- * GET /api/admin/list
- * 
- * This protected endpoint provides admin access to the complete course materials database.
- * Similar to the public list endpoint but with administrative privileges:
- * - Full database access without public visibility restrictions
- * - Enhanced search and filtering capabilities for content management
- * - Used by the admin dashboard for file management
- * 
- * Authentication: Bearer token (Supabase Auth) + admin role verification
- * 
- * Query Parameters:
- * - q: General search query (course codes, professor names, descriptions)
- * - course_code: Specific course code filter
- * - course_number: Specific course number filter  
- * - professor: Professor name filter
- * 
- * Response:
- * - Success: Array of course material records with full metadata
- * - Error: { error: "..." } - Authentication or database error
- */
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from '../../../../lib/supabaseClient';
 

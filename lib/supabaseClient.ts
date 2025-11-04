@@ -1,17 +1,3 @@
-/**
- * Supabase Client Configuration for OSU PAL
- * 
- * This module handles the creation and management of Supabase clients for both
- * browser (client-side) and server-side operations. It provides:
- * 
- * - Browser client: Uses public environment variables for client-side operations
- * - Server client: Uses service role key for server-side API operations  
- * - Hot Module Reload (HMR) compatibility during development
- * - Proper client singleton management to avoid multiple instances
- * 
- * The browser client uses the anon key for public operations like reading data,
- * while the server client uses elevated privileges for admin operations.
- */
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 /**

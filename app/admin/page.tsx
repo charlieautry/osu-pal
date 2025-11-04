@@ -1,19 +1,3 @@
-/**
- * Admin Dashboard Page - OSU PAL Administrative Interface
- * 
- * This component provides the administrative interface for managing course materials.
- * Features include:
- * - Secure authentication with Supabase Auth (admin-only access)
- * - PDF file upload with metadata (course info, dates, descriptions)
- * - File management (view, search, delete uploaded materials)
- * - Request management (view and respond to user material requests)
- * - Real-time search and filtering of uploaded files
- * - File validation and progress tracking for uploads
- * - Modal confirmations for destructive actions
- * 
- * Access is restricted to users listed in the 'admins' table in Supabase.
- * The component handles session management and redirects unauthorized users.
- */
 "use client";
 
 import React, { useEffect, useState } from 'react';

@@ -1,19 +1,3 @@
-/**
- * Main Home Page Component - OSU PAL Course Material Search
- * 
- * This is the primary user interface for the OSU PAL (Past Assessment Library).
- * Features include:
- * - Course material search and filtering (by course code, number, professor, term)
- * - Interactive data grid with sortable columns
- * - File download functionality with Supabase storage integration
- * - Material request form with Cloudflare Turnstile protection
- * - Responsive design with light/dark mode support
- * - Real-time search with debounced API calls
- * - Modal dialogs for user interactions and feedback
- * 
- * The component manages state for search filters, modal visibility, and data fetching
- * from the public API endpoints.
- */
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -101,7 +85,20 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
         return;
       }
 
-      // SECURITY: Send Turnstile token directly to request endpoint (server-side verification)
+      // Verify Turnstile token
+      const verifyResponse = await fetch('/api/verify-turnstile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+      
+      const verifyResult = await verifyResponse.json();
+      if (!verifyResult.success) {
+        throw new Error('Security verification failed');
+      }
+      
       console.log('Sending request with data:', formData);
       
       const response = await fetch('/api/public/request', {
@@ -112,8 +109,7 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
         body: JSON.stringify({
           course: formData.course,
           email: formData.email || null,
-          details: formData.details || null,
-          turnstileToken: token // Include token for server-side verification
+          details: formData.details || null
         }),
       });
       
@@ -132,38 +128,17 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
       onShowMessage({
         isOpen: true,
         type: 'success',
-        title: 'Request Submitted Successfully',
-        message: responseData.message || 'Thanks! We\'ll review your request and add the materials if available.'
+        title: 'Request Submitted',
+        message: 'Thanks! We\'ll look into adding these materials.'
       });
     } catch (error: any) {
-      console.error('Request submission error:', error);
-      
-      // Close the request modal and show appropriate error message
+      // Close the request modal and show error message
       onClose();
-      
-      let errorMessage = 'Failed to submit request. Please try again.';
-      let errorTitle = 'Request Failed';
-      
-      // Handle specific error types
-      if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-        errorTitle = 'Rate Limit Exceeded';
-        errorMessage = 'You\'ve made too many requests recently. Please wait and try again later.';
-      } else if (error.message.includes('Security verification')) {
-        errorTitle = 'Security Check Failed';
-        errorMessage = 'Please refresh the page and try again.';
-      } else if (error.message.includes('Validation')) {
-        errorTitle = 'Invalid Input';
-        errorMessage = error.message;
-      } else if (error.message.includes('duplicate') || error.message.includes('already submitted')) {
-        errorTitle = 'Duplicate Request';
-        errorMessage = 'You\'ve already submitted a request for this course recently. Please check back later.';
-      }
-      
       onShowMessage({
         isOpen: true,
         type: 'error',
-        title: errorTitle,
-        message: errorMessage
+        title: 'Request Failed',
+        message: error.message || 'Failed to submit request. Please try again.'
       });
     } finally {
       setSubmitting(false);
@@ -205,12 +180,9 @@ function RequestFormModal({ isOpen, onClose, onShowMessage }: RequestFormModalPr
               className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
                       focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                       hover:border-green-500 dark:hover:border-green-500"
-              maxLength={50}
+              maxLength={20}
               required
             />
-            <p className="mt-1 text-xs text-slate-500">
-              Example: "CS 1113" or "MATH 2144"
-            </p>
           </div>
 
           <div>

@@ -1,15 +1,3 @@
-/**
- * Root Layout Component for OSU PAL (Past Assessment Library)
- * 
- * This file defines the root layout that wraps all pages in the application.
- * It handles:
- * - Metadata configuration (SEO, Open Graph, Twitter cards)
- * - Font configuration using Next.js font optimization
- * - Global styling and theme setup (light/dark mode support)
- * - Site header with PAL branding
- * - Viewport and theme color configuration
- * - Cloudflare Turnstile script injection for bot protection
- */
 import type { Metadata } from "next";
 import { Inter as FontSans } from 'next/font/google';
 import Image from 'next/image';

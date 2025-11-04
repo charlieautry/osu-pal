@@ -1,21 +1,3 @@
-/**
- * Academic Term Date Calculation Utility for OSU PAL
- * 
- * This utility converts dates into academic term labels following OSU's academic calendar.
- * Used throughout the application to organize and filter course materials by semester.
- * 
- * Supports multiple input formats:
- * - Date objects
- * - ISO date strings (YYYY-MM-DD)  
- * - Other date string formats
- * 
- * Academic term definitions and date ranges (inclusive):
- * - Winter: Dec 15 → Jan 20 (labeled by the January year; e.g., Dec 15, 2024 → Winter 2025)
- * - Spring: Jan 21 → May 20
- * - Summer: May 21 → Aug 20
- * - Fall:   Aug 21 → Dec 14
- */
-
 // Convert a date (string or Date) into an academic term + year string.
 // Terms and ranges (inclusive):
 // - Winter: Dec 15  -> Jan 20  (Winter labeled by the January year; e.g. Dec 15, 2024 -> Winter 2025)

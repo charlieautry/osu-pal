@@ -1,23 +1,3 @@
-/**
- * Admin API Route: Delete Material Request by ID
- * 
- * DELETE /api/admin/requests/[id]
- * 
- * This protected endpoint allows administrators to delete/resolve student material requests.
- * Used when:
- * - A request has been fulfilled and should be removed from the queue
- * - A request is spam, duplicate, or inappropriate
- * - Cleaning up the admin dashboard request list
- * 
- * Authentication: Bearer token (Supabase Auth) + admin role verification
- * 
- * URL Parameters:
- * - id: Database ID of the request record to delete
- * 
- * Response:
- * - Success: { message: "Request deleted successfully" }
- * - Error: { error: "..." } - Authentication, permission, or deletion error
- */
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '../../../../../lib/supabaseClient';
 
