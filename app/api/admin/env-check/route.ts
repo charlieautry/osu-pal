@@ -13,14 +13,6 @@
  * - Returns status of critical environment variables (without exposing values)
  * - Useful for deployment verification and debugging configuration issues
  * - Only accessible to authenticated administrators
+ * 
+ * TODO: Implement the actual environment check logic
  */
-
-import { NextResponse } from 'next/server';
-
-export async function GET() {
-  // TODO: Implement environment check logic
-  return NextResponse.json({ 
-    status: 'not_implemented',
-    message: 'Environment check endpoint not yet implemented' 
-  });
-}
