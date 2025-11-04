@@ -1,6 +1,51 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from '../../../../lib/supabaseClient';
 
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const authHeader = request.headers.get('authorization') || '';
+    const token = authHeader.replace('Bearer ', '');
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const supabase = createServerSupabaseClient();
+    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    // Ensure user is an admin
+    const userId = userData.user.id;
+    const { data: adminRow, error: adminErr } = await supabase.from('admins').select('id').eq('user_id', userId).limit(1).maybeSingle();
+    if (adminErr || !adminRow) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const rawId = params.id;
+    const identifier = decodeURIComponent(rawId);
+    const body = await request.json();
+
+    // Build update object with correct column names
+    const updates: any = {};
+    if (body.title !== undefined) updates.title = body.title;
+    if (body.course_code !== undefined) updates['course code'] = body.course_code;
+    if (body.course_number !== undefined) updates['course number'] = body.course_number;
+    if (body.course_name !== undefined) updates['course name'] = body.course_name;
+    if (body.professor !== undefined) updates.professor = body.professor;
+    if (body.date !== undefined) updates.date = body.date;
+
+    // Update by path (primary identifier)
+    const result = await supabase.from('pdfs').update(updates).eq('path', identifier);
+
+    if (result.error) {
+      return NextResponse.json({ error: result.error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message ?? String(err) }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const authHeader = request.headers.get('authorization') || '';

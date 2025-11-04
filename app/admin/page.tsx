@@ -118,6 +118,10 @@ export default function AdminPage() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [uploadSectionOpen, setUploadSectionOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [editData, setEditData] = useState<any>({});
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
   const [modal, setModal] = useState<{
     isOpen: boolean;
@@ -380,6 +384,58 @@ export default function AdminPage() {
     }
   }
 
+  function startEdit(row: PdfRow) {
+    setEditingRow(row.id ?? row.path);
+    setEditData({
+      title: row.title ?? row['title'] ?? '',
+      course_code: row['course code'] ?? row.course_code ?? '',
+      course_number: row['course number'] ?? row.course_number ?? '',
+      course_name: row['course name'] ?? row.course_name ?? '',
+      professor: row.professor ?? '',
+      date: row.date ?? '',
+    });
+    setOpenMenuId(null);
+  }
+
+  async function saveEdit(id: string) {
+    setLoading(true);
+    const identifier = encodeURIComponent(id);
+    const res = await fetch(`/api/admin/${identifier}`, {
+      method: 'PATCH',
+      headers: { 
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}` 
+      },
+      body: JSON.stringify(editData),
+    });
+    const json = await res.json();
+    setLoading(false);
+    
+    if (json?.ok) {
+      setEditingRow(null);
+      setEditData({});
+      fetchList();
+      setModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Updated',
+        message: 'Document updated successfully'
+      });
+    } else {
+      setModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Update Failed',
+        message: json?.error ?? 'Update failed'
+      });
+    }
+  }
+
+  function cancelEdit() {
+    setEditingRow(null);
+    setEditData({});
+  }
+
   async function remove(id: string) {
     setModal({
       isOpen: true,
@@ -514,49 +570,73 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 p-8" suppressHydrationWarning>
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 p-4 sm:p-8" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-green-600 to-emerald-600">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-green-600 to-emerald-600">
               Document Management
             </h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-1">Upload and manage PDF resources</p>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1">Upload and manage PDF resources</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/50 dark:border-slate-700/50">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-slate-500">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 sm:w-5 h-4 sm:h-5 text-slate-500">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a5.99 5.99 0 00-4.793 2.39A6.483 6.483 0 0010 16.5a6.483 6.483 0 004.793-2.11A5.99 5.99 0 0010 12z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm text-slate-600 dark:text-slate-300">{session?.user?.email}</span>
+              <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 truncate">{session?.user?.email}</span>
             </div>
+            <div className="flex gap-2 sm:gap-4">
             <button 
               onClick={signOut} 
-              className="px-4 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-sm font-medium
+              className="flex-1 sm:flex-none px-4 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium
                        hover:border-red-500 hover:text-red-600 dark:hover:border-red-500 dark:hover:text-red-400 transition-colors"
             >
               Sign out
             </button>
             <Link 
               href="/" 
-              className="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-medium 
-                       hover:bg-green-700 transition-colors shadow-sm"
+              className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-green-600 text-white text-xs sm:text-sm font-medium 
+                       hover:bg-green-700 transition-colors shadow-sm text-center"
             >
               View Public Page
             </Link>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6 sm:space-y-8">
           {/* Upload Form Section */}
-          <section className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-6 shadow-xl border border-slate-200/50 dark:border-slate-700/50 flex flex-col h-[653px]">
-            <div className="flex-1 overflow-y-auto pr-1">
+          <section className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl shadow-xl border border-slate-200/50 dark:border-slate-700/50">
+            <button
+              onClick={() => setUploadSectionOpen(!uploadSectionOpen)}
+              className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors rounded-2xl"
+            >
+              <div className="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-green-600">
+                  <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
+                  <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                </svg>
+                <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">Upload Document</h2>
+              </div>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 20 20" 
+                fill="currentColor" 
+                className={`w-5 h-5 text-slate-500 transition-transform ${uploadSectionOpen ? 'rotate-180' : ''}`}
+              >
+                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+              </svg>
+            </button>
+            
+            {uploadSectionOpen && (
+            <div className="px-4 sm:px-6 pb-4 sm:pb-6">
               <form onSubmit={upload} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Code</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Code</label>
                     <input 
-                      className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                      className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
                                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                                 hover:border-green-500 dark:hover:border-green-500"
                       placeholder="e.g. CSE" 
@@ -565,9 +645,9 @@ export default function AdminPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Number</label>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Number</label>
                     <input 
-                      className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                      className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
                                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                                 hover:border-green-500 dark:hover:border-green-500"
                       placeholder="e.g. 3901" 
@@ -578,9 +658,9 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Name</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course Name</label>
                   <input 
-                    className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                    className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                               hover:border-green-500 dark:hover:border-green-500"
                     placeholder="e.g. Project: Design and Development" 
@@ -590,9 +670,9 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Professor</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Professor</label>
                   <input 
-                    className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                    className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                               hover:border-green-500 dark:hover:border-green-500"
                     placeholder="Professor's name" 
@@ -602,9 +682,9 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Document Title</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Document Title</label>
                   <input 
-                    className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                    className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                               hover:border-green-500 dark:hover:border-green-500"
                     placeholder="Document title" 
@@ -614,10 +694,10 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date</label>
+                  <label className="block text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date</label>
                   <input 
                     type="date"
-                    className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                    className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
                               hover:border-green-500 dark:hover:border-green-500"
                     value={meta.date}
@@ -631,10 +711,10 @@ export default function AdminPage() {
                     type="file" 
                     accept="application/pdf"
                     onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-                    className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-2.5 bg-white dark:bg-slate-800 
+                    className="w-full text-xs sm:text-sm rounded-xl border-2 border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-slate-800 
                               focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all
-                              hover:border-green-500 dark:hover:border-green-500 file:mr-4 file:py-2 file:px-4
-                              file:rounded-xl file:border-0 file:text-sm file:font-medium
+                              hover:border-green-500 dark:hover:border-green-500 file:mr-2 sm:file:mr-4 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4
+                              file:rounded-xl file:border-0 file:text-xs sm:file:text-sm file:font-medium
                               file:bg-green-50 file:text-green-700
                               dark:file:bg-green-900/30 dark:file:text-green-400"
                   />
@@ -642,7 +722,7 @@ export default function AdminPage() {
 
                 <div>
                   <button 
-                    className="w-full text-sm px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 
+                    className="w-full text-xs sm:text-sm px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 
                              hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-sm 
                              focus:ring-2 focus:ring-green-300 transition-all font-medium flex items-center justify-center gap-2" 
                     disabled={loading} 
@@ -670,10 +750,12 @@ export default function AdminPage() {
                 </div>
               </form>
             </div>
+            )}
           </section>
 
-          <section className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-6 shadow-xl border border-slate-200/50 dark:border-slate-700/50 flex flex-col h-[653px]">
-            <div className="flex items-center justify-end mb-6 flex-shrink-0">
+          {/* Document Library Section */}
+          <section className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-4 sm:p-6 shadow-xl border border-slate-200/50 dark:border-slate-700/50">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between sm:justify-end gap-3 sm:gap-3 mb-6">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <Select
@@ -745,26 +827,26 @@ export default function AdminPage() {
                     title={sortOrder === 'asc' ? 'Sort Descending' : 'Sort Ascending'}
                   >
                     {sortOrder === 'asc' ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 sm:w-5 h-4 sm:h-5">
                         <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clipRule="evenodd" />
                       </svg>
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 sm:w-5 h-4 sm:h-5">
                         <path fillRule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clipRule="evenodd" />
                       </svg>
                     )}
                   </button>
                 </div>
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-initial">
                   <input
-                    className="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 pl-10 pr-4 py-2 
+                    className="w-full text-sm sm:text-base rounded-xl border-2 border-slate-200 dark:border-slate-700 pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 
                               bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 
                               focus:border-transparent transition-all hover:border-green-500 dark:hover:border-green-500"
                     placeholder="Search documents..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -782,17 +864,16 @@ export default function AdminPage() {
               </div>
             </div>
             
-            <div className="flex-1 overflow-hidden">
-              <div className="h-full overflow-auto">
-                <div className="rounded-xl border border-slate-200/50 dark:border-slate-700/50">
-                  <table className="w-full text-left table-auto min-w-[800px]">
+            <div className="overflow-x-auto">
+              <div className="rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                <table className="w-full text-left table-auto min-w-[600px]">
                     <thead>
                       <tr className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50">
-                        <th className="py-3 px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Title</th>
-                        <th className="py-3 px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Course</th>
-                        <th className="py-3 px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Professor</th>
-                        <th className="py-3 px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Date</th>
-                        <th className="py-3 px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Actions</th>
+                        <th className="py-2 sm:py-3 px-3 sm:px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Title</th>
+                        <th className="py-2 sm:py-3 px-3 sm:px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Course</th>
+                        <th className="py-2 sm:py-3 px-3 sm:px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Professor</th>
+                        <th className="py-2 sm:py-3 px-3 sm:px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Date</th>
+                        <th className="py-2 sm:py-3 px-3 sm:px-6 sticky top-0 bg-slate-50 dark:bg-slate-800/50">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -826,56 +907,175 @@ export default function AdminPage() {
                           const compareResult = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
                           return sortOrder === 'asc' ? compareResult : -compareResult;
                         })
-                        .map((r) => (
-                          <tr key={r.id ?? r.path} className="border-t border-slate-200/50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                            <td className="py-3 px-6">
-                              <div className="font-medium">{r.title ?? r['title'] ?? 'Untitled'}</div>
-                              <div className="text-xs text-slate-500 mt-0.5 truncate max-w-[200px]">{r.path}</div>
+                        .map((r) => {
+                          const rowId = r.id ?? r.path;
+                          const isEditing = editingRow === rowId;
+                          
+                          return (
+                          <tr key={rowId} className="border-t border-slate-200/50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td className="py-2 sm:py-3 px-3 sm:px-6">
+                              {isEditing ? (
+                                <input
+                                  className="w-full text-xs sm:text-sm rounded-lg border-2 border-slate-200 dark:border-slate-700 px-2 py-1 bg-white dark:bg-slate-800 
+                                            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                  value={editData.title}
+                                  onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                                />
+                              ) : (
+                                <>
+                                  <div className="font-medium text-xs sm:text-sm">{r.title ?? r['title'] ?? 'Untitled'}</div>
+                                  <div className="text-xs text-slate-500 mt-0.5 truncate max-w-[150px] sm:max-w-[200px]">{r.path}</div>
+                                </>
+                              )}
                             </td>
-                            <td className="py-3 px-6">
-                              <div className="font-medium">{r['course code']} {r['course number']}</div>
-                              <div className="text-xs text-slate-500 mt-0.5">{r['course name'] ?? r.course_name}</div>
+                            <td className="py-2 sm:py-3 px-3 sm:px-6">
+                              {isEditing ? (
+                                <div className="space-y-1">
+                                  <div className="flex gap-1">
+                                    <input
+                                      className="w-16 text-xs sm:text-sm rounded-lg border-2 border-slate-200 dark:border-slate-700 px-2 py-1 bg-white dark:bg-slate-800 
+                                                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                      placeholder="Code"
+                                      value={editData.course_code}
+                                      onChange={(e) => setEditData({ ...editData, course_code: e.target.value })}
+                                    />
+                                    <input
+                                      className="w-16 text-xs sm:text-sm rounded-lg border-2 border-slate-200 dark:border-slate-700 px-2 py-1 bg-white dark:bg-slate-800 
+                                                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                      placeholder="Number"
+                                      value={editData.course_number}
+                                      onChange={(e) => setEditData({ ...editData, course_number: e.target.value })}
+                                    />
+                                  </div>
+                                  <input
+                                    className="w-full text-xs sm:text-sm rounded-lg border-2 border-slate-200 dark:border-slate-700 px-2 py-1 bg-white dark:bg-slate-800 
+                                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    placeholder="Course Name"
+                                    value={editData.course_name}
+                                    onChange={(e) => setEditData({ ...editData, course_name: e.target.value })}
+                                  />
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="font-medium text-xs sm:text-sm">{r['course code']} {r['course number']}</div>
+                                  <div className="text-xs text-slate-500 mt-0.5">{r['course name'] ?? r.course_name}</div>
+                                </>
+                              )}
                             </td>
-                            <td className="py-3 px-6">{r.professor}</td>
-                            <td className="py-3 px-6">
-                              <span className="text-sm text-slate-600 dark:text-slate-400">{termForDate(r.date)}</span>
+                            <td className="py-2 sm:py-3 px-3 sm:px-6 text-xs sm:text-sm">
+                              {isEditing ? (
+                                <input
+                                  className="w-full text-xs sm:text-sm rounded-lg border-2 border-slate-200 dark:border-slate-700 px-2 py-1 bg-white dark:bg-slate-800 
+                                            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                  value={editData.professor}
+                                  onChange={(e) => setEditData({ ...editData, professor: e.target.value })}
+                                />
+                              ) : (
+                                r.professor
+                              )}
                             </td>
-                            <td className="py-3 px-6">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={async () => {
-                                    try {
-                                      const res = await fetch(`/api/public/download?path=${encodeURIComponent(r.path)}`);
-                                      const j = await res.json();
-                                      if (j?.url) window.open(j.url, '_blank');
-                                      else setModal({ isOpen: true, type: 'error', title: 'Download Error', message: j?.error ?? 'Unable to generate download URL' });
-                                    } catch (err) {
-                                      setModal({ isOpen: true, type: 'error', title: 'Download Error', message: String(err) });
-                                    }
-                                  }}
-                                  className="p-2 rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 
-                                           focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
-                                  title="Download"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                                    <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
-                                    <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
-                                  </svg>
-                                </button>
-                                <button 
-                                  onClick={() => remove(r.id ?? r.path)}
-                                  className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 
-                                           focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-                                  title="Delete"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                                    <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
-                                  </svg>
-                                </button>
-                              </div>
+                            <td className="py-2 sm:py-3 px-3 sm:px-6">
+                              {isEditing ? (
+                                <input
+                                  type="date"
+                                  className="w-full text-xs sm:text-sm rounded-lg border-2 border-slate-200 dark:border-slate-700 px-2 py-1 bg-white dark:bg-slate-800 
+                                            focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                  value={editData.date}
+                                  onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+                                />
+                              ) : (
+                                <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">{termForDate(r.date)}</span>
+                              )}
+                            </td>
+                            <td className="py-2 sm:py-3 px-3 sm:px-6">
+                              {isEditing ? (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => saveEdit(rowId)}
+                                    className="p-1.5 sm:p-2 rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 
+                                             focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+                                    title="Save"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 sm:w-5 h-4 sm:h-5">
+                                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={cancelEdit}
+                                    className="p-1.5 sm:p-2 rounded-lg text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 
+                                             focus:outline-none focus:ring-2 focus:ring-slate-500 transition-colors"
+                                    title="Cancel"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 sm:w-5 h-4 sm:h-5">
+                                      <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="relative">
+                                  <button
+                                    onClick={() => setOpenMenuId(openMenuId === rowId ? null : rowId)}
+                                    className="p-1.5 sm:p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 
+                                             focus:outline-none focus:ring-2 focus:ring-slate-500 transition-colors"
+                                    title="Actions"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 sm:w-5 h-4 sm:h-5">
+                                      <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
+                                    </svg>
+                                  </button>
+                                  
+                                  {openMenuId === rowId && (
+                                    <>
+                                      <div 
+                                        className="fixed inset-0 z-10" 
+                                        onClick={() => setOpenMenuId(null)}
+                                      />
+                                      <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-20">
+                                        <button
+                                          onClick={() => {
+                                            setOpenMenuId(null);
+                                            // The download route redirects, so just open it directly
+                                            window.open(`/api/public/download?path=${encodeURIComponent(r.path)}`, '_blank');
+                                          }}
+                                          className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                                            <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
+                                            <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                                          </svg>
+                                          Download
+                                        </button>
+                                        <button
+                                          onClick={() => startEdit(r)}
+                                          className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                                            <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
+                                            <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
+                                          </svg>
+                                          Edit
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setOpenMenuId(null);
+                                            remove(rowId);
+                                          }}
+                                          className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                                            <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+                                          </svg>
+                                          Delete
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              )}
                             </td>
                           </tr>
-                        ))}
+                        );
+                        })}
                       {rows.length === 0 && (
                         <tr>
                           <td colSpan={5} className="py-12">
@@ -892,7 +1092,6 @@ export default function AdminPage() {
                   </table>
                 </div>
               </div>
-            </div>
           </section>
         </div>
       </div>
