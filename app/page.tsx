@@ -1200,7 +1200,7 @@ export default function Home() {
             <div>
               <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 md:mb-4">Contact & Takedown Requests</h3>
               <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 mb-3 md:mb-4">
-                If you have questions, or are a faculty member and wish to request the removal of specific materials, please contact me at the email below.
+                If you have questions, or are a faculty member and wish to request the removal of specific materials, please contact us at the email below.
               </p>
               <a 
                 href="mailto:help@osupal.com"
