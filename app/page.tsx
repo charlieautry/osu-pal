@@ -386,6 +386,7 @@ export default function Home() {
   const [showRequestForm, setShowRequestForm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [pageInputValue, setPageInputValue] = useState('1');
 
   const isLocalhost = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
@@ -586,6 +587,7 @@ export default function Home() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
+    setPageInputValue('1');
   }, [courseCode, courseNumber, professor, debouncedQ, sortField, sortOrder]);
 
   return (
@@ -1047,6 +1049,7 @@ export default function Home() {
                     if (option) {
                       setPageSize(option.value);
                       setCurrentPage(1);
+                      setPageInputValue('1');
                     }
                   }}
                   options={[
@@ -1109,7 +1112,13 @@ export default function Home() {
 
                 {/* Previous Button */}
                 <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setCurrentPage(p => {
+                      const newPage = Math.max(1, p - 1);
+                      setPageInputValue(String(newPage));
+                      return newPage;
+                    });
+                  }}
                   disabled={currentPage === 1}
                   className="p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700
                            hover:border-green-500 hover:text-green-600 dark:hover:border-green-500 dark:hover:text-green-400
@@ -1129,10 +1138,11 @@ export default function Home() {
                     type="number"
                     min="1"
                     max={totalPages}
-                    value={currentPage}
+                    value={pageInputValue}
                     onChange={(e) => {
+                      setPageInputValue(e.target.value);
                       const value = parseInt(e.target.value);
-                      if (value >= 1 && value <= totalPages) {
+                      if (!isNaN(value) && value >= 1 && value <= totalPages) {
                         setCurrentPage(value);
                       }
                     }}
@@ -1140,8 +1150,12 @@ export default function Home() {
                       const value = parseInt(e.target.value);
                       if (isNaN(value) || value < 1) {
                         setCurrentPage(1);
+                        setPageInputValue('1');
                       } else if (value > totalPages) {
                         setCurrentPage(totalPages);
+                        setPageInputValue(String(totalPages));
+                      } else {
+                        setPageInputValue(String(value));
                       }
                     }}
                     className="w-16 text-sm text-center rounded-lg border-2 border-slate-200 dark:border-slate-700 px-2 py-1
@@ -1153,7 +1167,13 @@ export default function Home() {
 
                 {/* Next Button */}
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => {
+                    setCurrentPage(p => {
+                      const newPage = Math.min(totalPages, p + 1);
+                      setPageInputValue(String(newPage));
+                      return newPage;
+                    });
+                  }}
                   disabled={currentPage === totalPages}
                   className="p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700
                            hover:border-green-500 hover:text-green-600 dark:hover:border-green-500 dark:hover:text-green-400
