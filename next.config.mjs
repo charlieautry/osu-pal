@@ -12,11 +12,12 @@ const nextConfig = {
     NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY,
   },
   async headers() {
-    // Only allow 'unsafe-eval' in development mode
+    // Next.js requires 'unsafe-inline' and 'unsafe-eval' for proper functionality
+    // In production, we keep 'unsafe-inline' but remove 'unsafe-eval' for better security
     const isDev = process.env.NODE_ENV === 'development';
     const scriptSrc = isDev 
-      ? "script-src 'self' 'unsafe-eval' https://challenges.cloudflare.com"
-      : "script-src 'self' 'sha256-0bIxp4G0bOkMelhieZDIpSmU1u/lLtxda/z61M/lnAc=' https://challenges.cloudflare.com";
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com"
+      : "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com";
 
     return [
       {
