@@ -12,15 +12,22 @@ const nextConfig = {
     NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY,
   },
   async headers() {
+    // Only allow 'unsafe-eval' in development mode
+    const isDev = process.env.NODE_ENV === 'development';
+    const scriptSrc = isDev 
+      ? "script-src 'self' 'unsafe-eval' https://challenges.cloudflare.com"
+      : "script-src 'self' https://challenges.cloudflare.com";
+
     return [
       {
+        // Apply stricter CORS policy to all pages
         source: '/:path*',
         headers: [
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
+              scriptSrc,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
@@ -32,6 +39,18 @@ const nextConfig = {
               "frame-ancestors 'none'",
               "upgrade-insecure-requests"
             ].join('; ')
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'require-corp'
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin'
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin'
           },
           {
             key: 'X-Frame-Options',
