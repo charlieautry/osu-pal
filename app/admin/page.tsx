@@ -615,20 +615,25 @@ export default function AdminPage() {
 
   if (!session) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 flex items-start justify-center p-8 pt-24" suppressHydrationWarning>
-        <div className="max-w-sm w-full mx-auto">
-          <div className="flex justify-center mb-4">
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 p-4 sm:p-8" suppressHydrationWarning>
+        {/* Header with View Public Page button */}
+        <div className="max-w-7xl mx-auto mb-6">
+          <div className="flex justify-end">
             <Link 
               href="/" 
-              className="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-medium 
+              className="px-4 py-2 rounded-xl bg-green-600 text-white text-xs sm:text-sm font-medium 
                        hover:bg-green-700 transition-colors shadow-sm inline-flex items-center gap-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                 <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
               </svg>
-              Back to Public Page
+              View Public Page
             </Link>
           </div>
+        </div>
+
+        <div className="max-w-sm w-full mx-auto flex items-start justify-center pt-16">
+        <div className="w-full">
           <div className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 rounded-2xl p-8 shadow-xl border border-slate-200/50 dark:border-slate-700/50">
             <form onSubmit={signIn} className="space-y-4">
               <div>
@@ -701,6 +706,7 @@ export default function AdminPage() {
             </form>
           </div>
         </div>
+        </div>
       </main>
     );
   }
@@ -708,6 +714,20 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 p-4 sm:p-8" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto">
+        {/* Header with View Public Page button */}
+        <div className="flex justify-end mb-6">
+          <Link 
+            href="/" 
+            className="px-4 py-2 rounded-xl bg-green-600 text-white text-xs sm:text-sm font-medium 
+                     hover:bg-green-700 transition-colors shadow-sm inline-flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+            </svg>
+            View Public Page
+          </Link>
+        </div>
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-green-600 to-emerald-600">
@@ -722,22 +742,13 @@ export default function AdminPage() {
               </svg>
               <span className="text-slate-600 dark:text-slate-300 truncate">{session?.user?.email}</span>
             </div>
-            <div className="flex gap-2 sm:gap-4">
             <button 
               onClick={signOut} 
-              className="flex-1 sm:flex-none px-4 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium
+              className="px-4 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-medium
                        hover:border-red-500 hover:text-red-600 dark:hover:border-red-500 dark:hover:text-red-400 transition-colors"
             >
               Sign out
             </button>
-            <Link 
-              href="/" 
-              className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-green-600 text-white text-xs sm:text-sm font-medium 
-                       hover:bg-green-700 transition-colors shadow-sm text-center flex items-center justify-center"
-            >
-              View Public Page
-            </Link>
-            </div>
           </div>
         </div>
 
