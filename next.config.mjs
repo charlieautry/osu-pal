@@ -16,7 +16,7 @@ const nextConfig = {
     const isDev = process.env.NODE_ENV === 'development';
     const scriptSrc = isDev 
       ? "script-src 'self' 'unsafe-eval' https://challenges.cloudflare.com"
-      : "script-src 'self' https://challenges.cloudflare.com";
+      : "script-src 'self' 'sha256-0bIxp4G0bOkMelhieZDIpSmU1u/lLtxda/z61M/lnAc=' https://challenges.cloudflare.com";
 
     return [
       {
