@@ -1223,7 +1223,7 @@ export default function Home() {
             <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-2">
               Demo Build - Does not contain real exams yet
             </p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-1">
+            <p className="text-xs text-slate-400 dark:text-slate-500 text-center mt-1 flex items-center justify-center gap-1">
               <a 
                 href="https://github.com/charlieautry/osu-pal" 
                 target="_blank" 
@@ -1235,7 +1235,8 @@ export default function Home() {
                 </svg>
                 GitHub
               </a>
-              {' · '}v{packageJson.version}
+              <span>·</span>
+              <span>v{packageJson.version}</span>
             </p>
           </div>
         </div>
